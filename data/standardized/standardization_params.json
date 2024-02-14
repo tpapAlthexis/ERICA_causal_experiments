@@ -1,0 +1,1158 @@
+{
+  "ComParE13_LLD_25Hz_F0final_sma_amean": {
+    "mean": 92.79510298037246,
+    "std": 34.933737422586574
+  },
+  "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_amean": {
+    "mean": 0.5766698803306146,
+    "std": 0.1525830878707864
+  },
+  "ComParE13_LLD_25Hz_jitterLocal_sma_amean": {
+    "mean": 0.035114173119339974,
+    "std": 0.017578500731903514
+  },
+  "ComParE13_LLD_25Hz_jitterDDP_sma_amean": {
+    "mean": 0.03476213819002603,
+    "std": 0.018752968577562906
+  },
+  "ComParE13_LLD_25Hz_shimmerLocal_sma_amean": {
+    "mean": 0.13266247249896787,
+    "std": 0.04694272120594554
+  },
+  "ComParE13_LLD_25Hz_logHNR_sma_amean": {
+    "mean": -35.05681113054654,
+    "std": 19.099617605590833
+  },
+  "ComParE13_LLD_25Hz_audspec_lengthL1norm_sma_amean": {
+    "mean": 0.42655572525797025,
+    "std": 0.25595267171151537
+  },
+  "ComParE13_LLD_25Hz_audspecRasta_lengthL1norm_sma_amean": {
+    "mean": 1.146212040467525,
+    "std": 0.13150635673686648
+  },
+  "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_amean": {
+    "mean": 0.028838413190338117,
+    "std": 0.02411883668387655
+  },
+  "ComParE13_LLD_25Hz_pcm_zcr_sma_amean": {
+    "mean": 0.05769832178458805,
+    "std": 0.025117470063560438
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[0]_amean": {
+    "mean": 0.15586265412109432,
+    "std": 0.020452225698986862
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[1]_amean": {
+    "mean": 0.3667821202968076,
+    "std": 0.07353162874266919
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[2]_amean": {
+    "mean": 0.5939688266755204,
+    "std": 0.13828552669533573
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[3]_amean": {
+    "mean": 0.7617983866639457,
+    "std": 0.1592219011427599
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[4]_amean": {
+    "mean": 0.9522328027036748,
+    "std": 0.2211641475795433
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[5]_amean": {
+    "mean": 1.0841160783961152,
+    "std": 0.25602641864163145
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[6]_amean": {
+    "mean": 1.1539565466732877,
+    "std": 0.25692520757677206
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[7]_amean": {
+    "mean": 1.1928007132699172,
+    "std": 0.2454660509859787
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[8]_amean": {
+    "mean": 1.2223520893364845,
+    "std": 0.2114301860025337
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[9]_amean": {
+    "mean": 1.2600856528289122,
+    "std": 0.19574628720534823
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[10]_amean": {
+    "mean": 1.3121810679158097,
+    "std": 0.19917063512740824
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[11]_amean": {
+    "mean": 1.366681020814167,
+    "std": 0.19780334216300657
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[12]_amean": {
+    "mean": 1.4126174304724235,
+    "std": 0.1877389040321789
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[13]_amean": {
+    "mean": 1.4434846706532674,
+    "std": 0.16542682960952906
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[14]_amean": {
+    "mean": 1.4786398907946998,
+    "std": 0.14837382350425696
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[15]_amean": {
+    "mean": 1.5247623014837146,
+    "std": 0.14393342106708543
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[16]_amean": {
+    "mean": 1.5619991512774059,
+    "std": 0.1442157805157906
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[17]_amean": {
+    "mean": 1.581377026778747,
+    "std": 0.134826150381672
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[18]_amean": {
+    "mean": 1.5804592214057993,
+    "std": 0.1232311486171244
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[19]_amean": {
+    "mean": 1.5442263482110379,
+    "std": 0.1156665513129809
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[20]_amean": {
+    "mean": 1.4513465430135326,
+    "std": 0.1002229834168681
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[21]_amean": {
+    "mean": 1.3088433553766938,
+    "std": 0.08298219447572219
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[22]_amean": {
+    "mean": 1.133040622520204,
+    "std": 0.06814666251619589
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[23]_amean": {
+    "mean": 0.9497912473586612,
+    "std": 0.05739909554390321
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[24]_amean": {
+    "mean": 0.7782614618333826,
+    "std": 0.0466338372751862
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[25]_amean": {
+    "mean": 0.6298458086386697,
+    "std": 0.037845090082158125
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_fband250-650_sma_amean": {
+    "mean": 0.6263808404984307,
+    "std": 0.8026586589725389
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_fband1000-4000_sma_amean": {
+    "mean": 0.012874435686001618,
+    "std": 0.019220241225854133
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff25.0_sma_amean": {
+    "mean": 205.84038214060658,
+    "std": 91.55321677986515
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff50.0_sma_amean": {
+    "mean": 412.8437516035215,
+    "std": 217.88206612432583
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff75.0_sma_amean": {
+    "mean": 943.8366051587834,
+    "std": 549.3290181810212
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff90.0_sma_amean": {
+    "mean": 1940.738250530669,
+    "std": 1142.2230005465901
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_amean": {
+    "mean": 0.16100844453146584,
+    "std": 0.1289284184559225
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_amean": {
+    "mean": 819.7168051884381,
+    "std": 389.68687094315925
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_amean": {
+    "mean": 3.3543448183547895,
+    "std": 0.5148231709074867
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralVariance_sma_amean": {
+    "mean": 3600490.2410887517,
+    "std": 2404369.617795063
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralSkewness_sma_amean": {
+    "mean": 16.99320190099901,
+    "std": 5.400618624497763
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralKurtosis_sma_amean": {
+    "mean": 1176.9896225916589,
+    "std": 752.8404301751706
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralSlope_sma_amean": {
+    "mean": -0.15822557775533014,
+    "std": 0.1832161700504472
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_amean": {
+    "mean": 90.78036769404086,
+    "std": 43.10870927628442
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_harmonicity_sma_amean": {
+    "mean": 1.562957004657664,
+    "std": 0.272962169041192
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[1]_amean": {
+    "mean": 22.411400521052833,
+    "std": 6.850708421331686
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[2]_amean": {
+    "mean": 17.34978349074254,
+    "std": 4.436193320789922
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[3]_amean": {
+    "mean": 12.315862737596834,
+    "std": 3.9732195831931714
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[4]_amean": {
+    "mean": 4.187739281475644,
+    "std": 4.398264699820631
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[5]_amean": {
+    "mean": -1.0944263736917965,
+    "std": 4.416121954412322
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[6]_amean": {
+    "mean": -3.786694796995565,
+    "std": 4.708382545598508
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[7]_amean": {
+    "mean": -5.1415051845117405,
+    "std": 4.290477561272682
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[8]_amean": {
+    "mean": -2.4541519846854083,
+    "std": 4.018750260255166
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[9]_amean": {
+    "mean": -1.8211522286123325,
+    "std": 4.288807516108746
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[10]_amean": {
+    "mean": -3.0971961895864473,
+    "std": 3.98518758160836
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[11]_amean": {
+    "mean": -3.234331006111559,
+    "std": 3.9638671208598097
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[12]_amean": {
+    "mean": -2.567942453636142,
+    "std": 3.0473160061285594
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[13]_amean": {
+    "mean": -2.0240479655577834,
+    "std": 2.825444172318912
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma[14]_amean": {
+    "mean": -2.5849997093292263,
+    "std": 3.0827954279946366
+  },
+  "ComParE13_LLD_25Hz_F0final_sma_de_amean": {
+    "mean": 8.73891140666598e-06,
+    "std": 9.136274634786277e-05
+  },
+  "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_de_amean": {
+    "mean": 1.4304920041556188e-09,
+    "std": 8.333921643955098e-08
+  },
+  "ComParE13_LLD_25Hz_jitterLocal_sma_de_amean": {
+    "mean": -4.589173683679766e-08,
+    "std": 2.0749378699625382e-07
+  },
+  "ComParE13_LLD_25Hz_jitterDDP_sma_de_amean": {
+    "mean": -4.0814521868334285e-08,
+    "std": 2.2472313699962756e-07
+  },
+  "ComParE13_LLD_25Hz_shimmerLocal_sma_de_amean": {
+    "mean": -1.8533231730111489e-07,
+    "std": 4.864122935210249e-07
+  },
+  "ComParE13_LLD_25Hz_logHNR_sma_de_amean": {
+    "mean": 1.1865643513850838e-06,
+    "std": 4.5527311512909685e-05
+  },
+  "ComParE13_LLD_25Hz_audspec_lengthL1norm_sma_de_amean": {
+    "mean": -2.3291543927319006e-05,
+    "std": 0.002515129664185731
+  },
+  "ComParE13_LLD_25Hz_audspecRasta_lengthL1norm_sma_de_amean": {
+    "mean": -1.359943524906521e-06,
+    "std": 0.004535069659642522
+  },
+  "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_de_amean": {
+    "mean": -9.023102066626333e-07,
+    "std": 0.00024889184514880104
+  },
+  "ComParE13_LLD_25Hz_pcm_zcr_sma_de_amean": {
+    "mean": -1.5677596990200601e-06,
+    "std": 0.0002821134881841002
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[0]_amean": {
+    "mean": 1.0205092053616355e-05,
+    "std": 0.0007440920025438798
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[1]_amean": {
+    "mean": -6.514447523585461e-06,
+    "std": 0.002586217366442214
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[2]_amean": {
+    "mean": -8.598573282467745e-06,
+    "std": 0.005140767738097273
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[3]_amean": {
+    "mean": 5.9330755093714846e-05,
+    "std": 0.006461142220255311
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[4]_amean": {
+    "mean": 1.3743736283747176e-05,
+    "std": 0.008906244691842546
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[5]_amean": {
+    "mean": -3.9919507004032435e-05,
+    "std": 0.010225499119739193
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[6]_amean": {
+    "mean": -8.861047937951049e-05,
+    "std": 0.008873303106851527
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[7]_amean": {
+    "mean": -5.609196336510222e-05,
+    "std": 0.008663079864473806
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[8]_amean": {
+    "mean": -5.884581055788233e-05,
+    "std": 0.007299478890555794
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[9]_amean": {
+    "mean": -4.9614133841720275e-05,
+    "std": 0.0066628994729349775
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[10]_amean": {
+    "mean": -7.406326783564622e-05,
+    "std": 0.00713185126683174
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[11]_amean": {
+    "mean": -7.276478010155028e-05,
+    "std": 0.006995132325318896
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[12]_amean": {
+    "mean": -1.3768589080441806e-05,
+    "std": 0.007292713663532934
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[13]_amean": {
+    "mean": 4.8139043738463664e-05,
+    "std": 0.006108659983074255
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[14]_amean": {
+    "mean": 3.903638699537631e-05,
+    "std": 0.0054383324398852954
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[15]_amean": {
+    "mean": -6.264717983731211e-06,
+    "std": 0.005056690430827613
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[16]_amean": {
+    "mean": 1.3464239821461603e-06,
+    "std": 0.005392416256692699
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[17]_amean": {
+    "mean": 2.888188073857191e-05,
+    "std": 0.0050593458663403135
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[18]_amean": {
+    "mean": 8.140637013857216e-06,
+    "std": 0.004661805172789368
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[19]_amean": {
+    "mean": -1.2776604849303422e-05,
+    "std": 0.004349495467903089
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[20]_amean": {
+    "mean": 1.3862887150057182e-05,
+    "std": 0.0038649924754419404
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[21]_amean": {
+    "mean": 5.108907245872147e-05,
+    "std": 0.0031355993222095917
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[22]_amean": {
+    "mean": 5.6702179481873056e-05,
+    "std": 0.002580146529628376
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[23]_amean": {
+    "mean": 4.6466550938097076e-05,
+    "std": 0.002036901890661981
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[24]_amean": {
+    "mean": 4.339022107081556e-05,
+    "std": 0.0016368124925478387
+  },
+  "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[25]_amean": {
+    "mean": 3.21400913907917e-05,
+    "std": 0.0014132952997783707
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_fband250-650_sma_de_amean": {
+    "mean": -0.0001122439696476877,
+    "std": 0.010644361804500173
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_fband1000-4000_sma_de_amean": {
+    "mean": -2.3608888924700267e-06,
+    "std": 0.0003136358127224408
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff25.0_sma_de_amean": {
+    "mean": -0.028499044814169854,
+    "std": 1.88597927022665
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff50.0_sma_de_amean": {
+    "mean": -0.07753443849184931,
+    "std": 3.5011499088796296
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff75.0_sma_de_amean": {
+    "mean": -0.1023173073883862,
+    "std": 7.083556312347087
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff90.0_sma_de_amean": {
+    "mean": 0.0130287278561155,
+    "std": 12.910674118967691
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_de_amean": {
+    "mean": 3.229089324836774e-06,
+    "std": 0.0013915349758249346
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_de_amean": {
+    "mean": -0.04972796670348865,
+    "std": 4.774502315658198
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_de_amean": {
+    "mean": -1.443382818231557e-05,
+    "std": 0.006039041691065901
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralVariance_sma_de_amean": {
+    "mean": -53.58004265305677,
+    "std": 25090.495607170706
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralSkewness_sma_de_amean": {
+    "mean": 0.0008011793694490737,
+    "std": 0.08882797646423085
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralKurtosis_sma_de_amean": {
+    "mean": 0.11664089031125154,
+    "std": 13.704382502872718
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_spectralSlope_sma_de_amean": {
+    "mean": 1.8124332406130583e-05,
+    "std": 0.002253497786664014
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_de_amean": {
+    "mean": -0.0055060569137774,
+    "std": 0.5282520145732302
+  },
+  "ComParE13_LLD_25Hz_pcm_Mag_harmonicity_sma_de_amean": {
+    "mean": -5.0868783258685485e-05,
+    "std": 0.003473446096074045
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[1]_amean": {
+    "mean": -0.00040026922535853714,
+    "std": 0.07388764336462665
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[2]_amean": {
+    "mean": 0.0010252910045893847,
+    "std": 0.052693728937213476
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[3]_amean": {
+    "mean": 0.0006016726005453989,
+    "std": 0.0591628256021821
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[4]_amean": {
+    "mean": 0.00082064719567413,
+    "std": 0.0612191099022483
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[5]_amean": {
+    "mean": -0.0004922282785223317,
+    "std": 0.07287560812956871
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[6]_amean": {
+    "mean": -4.404340044993818e-05,
+    "std": 0.0691412389703931
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[7]_amean": {
+    "mean": 0.0005050840122353767,
+    "std": 0.05851594974472285
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[8]_amean": {
+    "mean": -5.8635395383190635e-05,
+    "std": 0.061027174244900104
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[9]_amean": {
+    "mean": 0.00018523351308019097,
+    "std": 0.06535247466514421
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[10]_amean": {
+    "mean": -0.00030450542241025136,
+    "std": 0.05461539597861142
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[11]_amean": {
+    "mean": 0.00010648936715478222,
+    "std": 0.05202009228712509
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[12]_amean": {
+    "mean": 0.0008291246148719171,
+    "std": 0.045512205464494276
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[13]_amean": {
+    "mean": 0.0007100435861624225,
+    "std": 0.04273244452450836
+  },
+  "ComParE13_LLD_25Hz_mfcc_sma_de[14]_amean": {
+    "mean": 0.0008198015000213588,
+    "std": 0.03955609349705386
+  },
+  "audio_speech_probability_lstm_vad": {
+    "mean": 0.594633733415608,
+    "std": 0.11543992590720177
+  },
+  "VIDEO_40_LLD_AU1": {
+    "mean": 157.88220950659803,
+    "std": 1380.1216763404766
+  },
+  "VIDEO_40_LLD_AU2": {
+    "mean": -111.98708317740812,
+    "std": 938.8136515028394
+  },
+  "VIDEO_40_LLD_AU4": {
+    "mean": -57.29864272836916,
+    "std": 499.99509758357897
+  },
+  "VIDEO_40_LLD_AU5": {
+    "mean": 2.8745484005654003,
+    "std": 76.26877239376181
+  },
+  "VIDEO_40_LLD_AU6": {
+    "mean": -40.12003022443096,
+    "std": 350.2444076079079
+  },
+  "VIDEO_40_LLD_AU7": {
+    "mean": 33.31447871098255,
+    "std": 303.37214229279806
+  },
+  "VIDEO_40_LLD_AU9": {
+    "mean": 11.172251847385965,
+    "std": 101.68417864568158
+  },
+  "VIDEO_40_LLD_AU11": {
+    "mean": -68.55793219245622,
+    "std": 576.5925152629989
+  },
+  "VIDEO_40_LLD_AU12": {
+    "mean": -3.500709007296908,
+    "std": 56.170981903587375
+  },
+  "VIDEO_40_LLD_AU15": {
+    "mean": 25.332708147671795,
+    "std": 218.27354236492857
+  },
+  "VIDEO_40_LLD_AU17": {
+    "mean": 49.87556824070414,
+    "std": 462.26212810874637
+  },
+  "VIDEO_40_LLD_AU20": {
+    "mean": 1.0030208776037117,
+    "std": 48.752174766171294
+  },
+  "VIDEO_40_LLD_AU23": {
+    "mean": 37.658820520380736,
+    "std": 329.0371917104215
+  },
+  "VIDEO_40_LLD_AU24": {
+    "mean": 42.57154563727491,
+    "std": 372.8352660285641
+  },
+  "VIDEO_40_LLD_AU25": {
+    "mean": -22.318044293516625,
+    "std": 189.47188372226194
+  },
+  "VIDEO_40_LLD_Yaw": {
+    "mean": 1030.912229969047,
+    "std": 8782.14582080805
+  },
+  "VIDEO_40_LLD_Pitch": {
+    "mean": 125.40355682005469,
+    "std": 1111.9670520628038
+  },
+  "VIDEO_40_LLD_Roll": {
+    "mean": 14.078918967623215,
+    "std": 48.31126117638857
+  },
+  "VIDEO_40_LLD_Opt_mean": {
+    "mean": 10.568002991540265,
+    "std": 278.09735609962627
+  },
+  "VIDEO_40_LLD_Opt_std": {
+    "mean": 113.04847695007439,
+    "std": 1223.611923908062
+  },
+  "VIDEO_40_LLD_AU1_delta": {
+    "mean": -28.5463342687864,
+    "std": 244.212426268494
+  },
+  "VIDEO_40_LLD_AU2_delta": {
+    "mean": -32.58069261504946,
+    "std": 275.0740571503184
+  },
+  "VIDEO_40_LLD_AU4_delta": {
+    "mean": -5.3670075832650745,
+    "std": 45.27304187999395
+  },
+  "VIDEO_40_LLD_AU5_delta": {
+    "mean": -1.2358893805542193,
+    "std": 11.854079008431896
+  },
+  "VIDEO_40_LLD_AU6_delta": {
+    "mean": 1.3823827968586584,
+    "std": 12.313445572744298
+  },
+  "VIDEO_40_LLD_AU7_delta": {
+    "mean": -1.4640569704321005,
+    "std": 13.327761909263893
+  },
+  "VIDEO_40_LLD_AU9_delta": {
+    "mean": 0.00976540911211951,
+    "std": 0.18520557831847467
+  },
+  "VIDEO_40_LLD_AU11_delta": {
+    "mean": 0.3170798981372254,
+    "std": 2.894339268290838
+  },
+  "VIDEO_40_LLD_AU12_delta": {
+    "mean": 1.000596527640195,
+    "std": 11.38714187443764
+  },
+  "VIDEO_40_LLD_AU15_delta": {
+    "mean": 15.604432915637252,
+    "std": 131.81904966993906
+  },
+  "VIDEO_40_LLD_AU17_delta": {
+    "mean": -0.007134450533158355,
+    "std": 1.4158824757191826
+  },
+  "VIDEO_40_LLD_AU20_delta": {
+    "mean": -1.0047096699433955,
+    "std": 8.51584019630039
+  },
+  "VIDEO_40_LLD_AU23_delta": {
+    "mean": -0.3038761881609528,
+    "std": 2.897486179003712
+  },
+  "VIDEO_40_LLD_AU24_delta": {
+    "mean": -12.546975164636144,
+    "std": 106.98696614031763
+  },
+  "VIDEO_40_LLD_AU25_delta": {
+    "mean": -1.8462831720326447,
+    "std": 15.761574517725686
+  },
+  "VIDEO_40_LLD_Yaw_delta": {
+    "mean": -10.432024033783227,
+    "std": 93.75766231815372
+  },
+  "VIDEO_40_LLD_Pitch_delta": {
+    "mean": 43.31621741432171,
+    "std": 364.5639375273272
+  },
+  "VIDEO_40_LLD_Roll_delta": {
+    "mean": 13.686350880961156,
+    "std": 118.48846974527424
+  },
+  "VIDEO_40_LLD_Opt_mean_delta": {
+    "mean": -2.782620785814395,
+    "std": 26.163185158385986
+  },
+  "VIDEO_40_LLD_Opt_std_delta": {
+    "mean": -1.7059519255017905,
+    "std": 19.030076900704447
+  },
+  "Face_detection_probability": {
+    "mean": 0.7274215217050111,
+    "std": 0.20657379013816465
+  },
+  "ECG_54_LLD_ECG_HR": {
+    "mean": 79.72514750567176,
+    "std": 7.298973659289294
+  },
+  "ECG_54_LLD_ECG_HRV": {
+    "mean": -0.008887957818008519,
+    "std": 0.2574202303000291
+  },
+  "ECG_54_LLD_ECG_zcr": {
+    "mean": 13.62020522152182,
+    "std": 1.6534066166320012
+  },
+  "ECG_54_LLD_ECG_FFT_1": {
+    "mean": 0.015142454175538438,
+    "std": 0.007397253811145619
+  },
+  "ECG_54_LLD_ECG_FFT_2": {
+    "mean": 0.1311048885394441,
+    "std": 0.027270855007636766
+  },
+  "ECG_54_LLD_ECG_FFT_3": {
+    "mean": 0.11345162972993988,
+    "std": 0.021635236907134252
+  },
+  "ECG_54_LLD_ECG_FFT_4": {
+    "mean": 0.13920684235724082,
+    "std": 0.026763396514922027
+  },
+  "ECG_54_LLD_ECG_FFT_5": {
+    "mean": 0.11077683315701208,
+    "std": 0.021640544682883175
+  },
+  "ECG_54_LLD_ECG_FFT_6": {
+    "mean": 0.09590673686342199,
+    "std": 0.019412003994122445
+  },
+  "ECG_54_LLD_ECG_FFT_7": {
+    "mean": 0.09423260701046496,
+    "std": 0.018867594307907964
+  },
+  "ECG_54_LLD_ECG_FFT_8": {
+    "mean": 0.08874924868769903,
+    "std": 0.01827754300174859
+  },
+  "ECG_54_LLD_ECG_FFT_9": {
+    "mean": 0.0741995993010819,
+    "std": 0.015570559777531924
+  },
+  "ECG_54_LLD_ECG_FFT_10": {
+    "mean": 0.058825433330631074,
+    "std": 0.012891043942636127
+  },
+  "ECG_54_LLD_ECG_FFT_11": {
+    "mean": 0.04207059155929362,
+    "std": 0.009482881639306944
+  },
+  "ECG_54_LLD_ECG_FFT_12": {
+    "mean": 0.02692617575340404,
+    "std": 0.006288541080913506
+  },
+  "ECG_54_LLD_ECG_FFT_entropy": {
+    "mean": 27.028909201647643,
+    "std": 2.884126380340225
+  },
+  "ECG_54_LLD_ECG_FFT_mean_frequency": {
+    "mean": 11.616385647220476,
+    "std": 0.5231288228468091
+  },
+  "ECG_54_LLD_ECG_FFT_slope": {
+    "mean": -0.004169060654654149,
+    "std": 0.0010480564059872142
+  },
+  "ECG_54_LLD_ECG_mean": {
+    "mean": 9.959066989629386e-07,
+    "std": 0.00013385002010245196
+  },
+  "ECG_54_LLD_ECG_std": {
+    "mean": 0.13084783756694562,
+    "std": 0.011008799163746438
+  },
+  "ECG_54_LLD_ECG_kurtosis": {
+    "mean": 12.46224884224565,
+    "std": 1.6720750701310467
+  },
+  "ECG_54_LLD_ECG_skewness": {
+    "mean": -1.8487179525762296,
+    "std": 0.2982882937739599
+  },
+  "ECG_54_LLD_ECG_NSImn": {
+    "mean": 0.0654528219066573,
+    "std": 0.007662819966471961
+  },
+  "ECG_54_LLD_ECG_NLDmn": {
+    "mean": 207.00591352418422,
+    "std": 12.760405471517393
+  },
+  "ECG_54_LLD_ECG_VLF": {
+    "mean": 1.1226666944114246e-06,
+    "std": 3.5109586044987596e-07
+  },
+  "ECG_54_LLD_ECG_LF": {
+    "mean": 3.812912067115941e-05,
+    "std": 1.1920112686856592e-05
+  },
+  "ECG_54_LLD_ECG_HF": {
+    "mean": 0.00020345522000349595,
+    "std": 6.360821870705426e-05
+  },
+  "ECG_54_LLD_ECG_LFHF": {
+    "mean": 0.20729115536638307,
+    "std": 0.01391543364802516
+  },
+  "ECG_54_LLD_ECG_zcr_delta": {
+    "mean": -0.001966459065610447,
+    "std": 0.6340285200961941
+  },
+  "ECG_54_LLD_ECG_FFT_1_delta": {
+    "mean": 1.3303175486741003e-05,
+    "std": 0.004150379805021762
+  },
+  "ECG_54_LLD_ECG_FFT_2_delta": {
+    "mean": 9.16802092547061e-05,
+    "std": 0.01585981850888368
+  },
+  "ECG_54_LLD_ECG_FFT_3_delta": {
+    "mean": -9.066335743524785e-05,
+    "std": 0.0140964350724219
+  },
+  "ECG_54_LLD_ECG_FFT_4_delta": {
+    "mean": -0.00010292612246375613,
+    "std": 0.016530013276684095
+  },
+  "ECG_54_LLD_ECG_FFT_5_delta": {
+    "mean": -5.980860344273939e-05,
+    "std": 0.01372461336171152
+  },
+  "ECG_54_LLD_ECG_FFT_6_delta": {
+    "mean": -8.647528790215482e-05,
+    "std": 0.012095270746581828
+  },
+  "ECG_54_LLD_ECG_FFT_7_delta": {
+    "mean": -6.398450647447208e-05,
+    "std": 0.011905144990916341
+  },
+  "ECG_54_LLD_ECG_FFT_8_delta": {
+    "mean": -5.4746053872397924e-05,
+    "std": 0.011318994869170922
+  },
+  "ECG_54_LLD_ECG_FFT_9_delta": {
+    "mean": -7.890060212904177e-05,
+    "std": 0.009389071228614335
+  },
+  "ECG_54_LLD_ECG_FFT_10_delta": {
+    "mean": -8.097266265561282e-05,
+    "std": 0.007637833191395146
+  },
+  "ECG_54_LLD_ECG_FFT_11_delta": {
+    "mean": -4.270190304721544e-05,
+    "std": 0.0056926432953216975
+  },
+  "ECG_54_LLD_ECG_FFT_12_delta": {
+    "mean": -3.6255098003469134e-05,
+    "std": 0.003756393455702518
+  },
+  "ECG_54_LLD_ECG_FFT_entropy_delta": {
+    "mean": -0.007281420966738618,
+    "std": 1.8160528348433702
+  },
+  "ECG_54_LLD_ECG_FFT_mean_frequency_delta": {
+    "mean": -0.0035438209187125843,
+    "std": 0.24758151251325433
+  },
+  "ECG_54_LLD_ECG_FFT_slope_delta": {
+    "mean": -3.3533834869344344e-06,
+    "std": 0.0005784580062225971
+  },
+  "ECG_54_LLD_ECG_mean_delta": {
+    "mean": 8.967907611333167e-06,
+    "std": 0.0006587721580061833
+  },
+  "ECG_54_LLD_ECG_std_delta": {
+    "mean": -4.022754229362379e-05,
+    "std": 0.004537570501103215
+  },
+  "ECG_54_LLD_ECG_kurtosis_delta": {
+    "mean": 0.0016526857097110502,
+    "std": 0.7691992904433902
+  },
+  "ECG_54_LLD_ECG_skewness_delta": {
+    "mean": -8.231376240709684e-05,
+    "std": 0.12072477914866259
+  },
+  "ECG_54_LLD_ECG_NSImn_delta": {
+    "mean": -0.0001718761466756532,
+    "std": 0.01333927216269413
+  },
+  "ECG_54_LLD_ECG_NLDmn_delta": {
+    "mean": -0.04971034392873694,
+    "std": 4.591423028141151
+  },
+  "ECG_54_LLD_ECG_VLF_delta": {
+    "mean": 2.6492232113077262e-08,
+    "std": 2.3704474038391614e-06
+  },
+  "ECG_54_LLD_ECG_LF_delta": {
+    "mean": 9.002696329495268e-07,
+    "std": 8.026385798563532e-05
+  },
+  "ECG_54_LLD_ECG_HF_delta": {
+    "mean": 4.801891123305662e-06,
+    "std": 0.00042900574159243773
+  },
+  "ECG_54_LLD_ECG_LFHF_delta": {
+    "mean": -0.00036842664402907317,
+    "std": 0.06410840039399496
+  },
+  "EDA_62_LLD_time_code": {
+    "mean": 151.33147958478347,
+    "std": 85.28235148875073
+  },
+  "EDA_62_LLD_EDA_slope": {
+    "mean": -4.2665864571801923e-07,
+    "std": 5.1743243984056216e-06
+  },
+  "EDA_62_LLD_EDA_std": {
+    "mean": 0.006578946275677833,
+    "std": 0.004637375742866552
+  },
+  "EDA_62_LLD_SCR_FFT_entropy": {
+    "mean": 0.8871329284054391,
+    "std": 0.17639673043916482
+  },
+  "EDA_62_LLD_SCR_FFT_mean_frequency": {
+    "mean": 0.912052112276283,
+    "std": 0.054944761407446314
+  },
+  "EDA_62_LLD_EDA_mean": {
+    "mean": 0.8723234959249279,
+    "std": 0.0375167136263384
+  },
+  "EDA_62_LLD_EDA_meanD": {
+    "mean": -4.1917225269391166e-07,
+    "std": 4.656505370922946e-06
+  },
+  "EDA_62_LLD_EDA_meanDneg": {
+    "mean": -9.355851354363186e-05,
+    "std": 2.037675746843198e-06
+  },
+  "EDA_62_LLD_EDA_prop": {
+    "mean": 0.11091476159451069,
+    "std": 0.03471089254898662
+  },
+  "EDA_62_LLD_EDA_Xbound": {
+    "mean": 3488.4216900901974,
+    "std": 150.03040275556128
+  },
+  "EDA_62_LLD_EDA_kurtosis": {
+    "mean": 2.40851014316201,
+    "std": 0.9326321622468501
+  },
+  "EDA_62_LLD_EDA_skewness": {
+    "mean": 0.12797749075623013,
+    "std": 0.46774761207737403
+  },
+  "EDA_62_LLD_EDA_NSImn": {
+    "mean": 1.0280191592791417,
+    "std": 0.036602837474122935
+  },
+  "EDA_62_LLD_EDA_NLDmn": {
+    "mean": 163.56792377536084,
+    "std": 63.165641839019386
+  },
+  "EDA_62_LLD_SCL_mean": {
+    "mean": 0.0019022454790189583,
+    "std": 0.2022295267232465
+  },
+  "EDA_62_LLD_SCL_meanD": {
+    "mean": -9.157587492229133e-06,
+    "std": 0.0003035478450472879
+  },
+  "EDA_62_LLD_SCL_meanDneg": {
+    "mean": -0.0003394116318098564,
+    "std": 0.00023670754399571583
+  },
+  "EDA_62_LLD_SCL_prop": {
+    "mean": 0.6344536359052484,
+    "std": 0.23199623754221438
+  },
+  "EDA_62_LLD_SCL_Xbound": {
+    "mean": 1.9006383629766797,
+    "std": 202.07279297424924
+  },
+  "EDA_62_LLD_SCL_kurtosis": {
+    "mean": 2.2041019745180823,
+    "std": 0.4989830340828353
+  },
+  "EDA_62_LLD_SCL_skewness": {
+    "mean": 0.09076650973803728,
+    "std": 0.44428911437594487
+  },
+  "EDA_62_LLD_SCL_NSImn": {
+    "mean": 1.0467512447906964,
+    "std": 0.010416739952960268
+  },
+  "EDA_62_LLD_SCL_NLDmn": {
+    "mean": 29.00148597964926,
+    "std": 0.6781560406094546
+  },
+  "EDA_62_LLD_SCR_mean": {
+    "mean": 1.667315281328875e-05,
+    "std": 0.0017894544994216605
+  },
+  "EDA_62_LLD_SCR_meanD": {
+    "mean": -3.421088198908536e-07,
+    "std": 2.7951762726814498e-05
+  },
+  "EDA_62_LLD_SCR_meanDneg": {
+    "mean": -0.002014099797297692,
+    "std": 0.0014677047801348083
+  },
+  "EDA_62_LLD_SCR_prop": {
+    "mean": 0.500247777226477,
+    "std": 0.024169997602166995
+  },
+  "EDA_62_LLD_SCR_Xbound": {
+    "mean": 0.016686810345821253,
+    "std": 1.7824492819570261
+  },
+  "EDA_62_LLD_SCR_kurtosis": {
+    "mean": 2.259107343736403,
+    "std": 0.48309555213052796
+  },
+  "EDA_62_LLD_SCR_skewness": {
+    "mean": -0.0003169638264393578,
+    "std": 0.06100344940179046
+  },
+  "EDA_62_LLD_SCR_NSImn": {
+    "mean": 0.8784474103434896,
+    "std": 0.02533774704144541
+  },
+  "EDA_62_LLD_SCR_NLDmn": {
+    "mean": 31.628980909502307,
+    "std": 0.4332101953440254
+  },
+  "EDA_62_LLD_EDA_slope_delta": {
+    "mean": -2.174112515303266e-08,
+    "std": 3.1483036600180174e-06
+  },
+  "EDA_62_LLD_EDA_std_delta": {
+    "mean": -3.22557123019062e-05,
+    "std": 0.0019863653417162546
+  },
+  "EDA_62_LLD_SCR_FFT_entropy_delta": {
+    "mean": 0.0014700199675067103,
+    "std": 0.10331832463304685
+  },
+  "EDA_62_LLD_SCR_FFT_mean_frequency_delta": {
+    "mean": 0.00017242436938479238,
+    "std": 0.02490599146190564
+  },
+  "EDA_62_LLD_EDA_mean_delta": {
+    "mean": -0.00041943084154276417,
+    "std": 0.004655582172354702
+  },
+  "EDA_62_LLD_EDA_meanD_delta": {
+    "mean": -1.768988052323937e-08,
+    "std": 2.5017298302039716e-06
+  },
+  "EDA_62_LLD_EDA_meanDneg_delta": {
+    "mean": 5.828393516934872e-09,
+    "std": 9.320065015839857e-07
+  },
+  "EDA_62_LLD_EDA_prop_delta": {
+    "mean": -5.412703873907268e-05,
+    "std": 0.015435087713219378
+  },
+  "EDA_62_LLD_EDA_Xbound_delta": {
+    "mean": -1.6773494972410732,
+    "std": 18.619798909507374
+  },
+  "EDA_62_LLD_EDA_kurtosis_delta": {
+    "mean": 0.004895809361534509,
+    "std": 0.6076965663475513
+  },
+  "EDA_62_LLD_EDA_skewness_delta": {
+    "mean": 0.0028250425501845267,
+    "std": 0.3358295808817074
+  },
+  "EDA_62_LLD_EDA_NSImn_delta": {
+    "mean": -0.0001667412479857902,
+    "std": 0.021133248754167347
+  },
+  "EDA_62_LLD_EDA_NLDmn_delta": {
+    "mean": 0.2421492796162548,
+    "std": 20.615233367374664
+  },
+  "EDA_62_LLD_SCL_mean_delta": {
+    "mean": -0.002291124634268363,
+    "std": 0.0758381056022124
+  },
+  "EDA_62_LLD_SCL_meanD_delta": {
+    "mean": -5.16748124359128e-07,
+    "std": 0.00017379285173097937
+  },
+  "EDA_62_LLD_SCL_meanDneg_delta": {
+    "mean": 1.6850832504440017e-06,
+    "std": 8.481138177847175e-05
+  },
+  "EDA_62_LLD_SCL_prop_delta": {
+    "mean": -0.0007791245635575133,
+    "std": 0.11921924965318974
+  },
+  "EDA_62_LLD_SCL_Xbound_delta": {
+    "mean": -2.2895606096900885,
+    "std": 75.80152084649194
+  },
+  "EDA_62_LLD_SCL_kurtosis_delta": {
+    "mean": -2.586741770524885e-05,
+    "std": 0.4376698632969858
+  },
+  "EDA_62_LLD_SCL_skewness_delta": {
+    "mean": 0.003971344253035111,
+    "std": 0.34343302179102664
+  },
+  "EDA_62_LLD_SCL_NSImn_delta": {
+    "mean": 7.450792798935841e-05,
+    "std": 0.008914980015266999
+  },
+  "EDA_62_LLD_SCL_NLDmn_delta": {
+    "mean": -0.003063479687839548,
+    "std": 0.3716915140306899
+  },
+  "EDA_62_LLD_SCR_mean_delta": {
+    "mean": -8.83339216706405e-05,
+    "std": 0.006991545935303702
+  },
+  "EDA_62_LLD_SCR_meanD_delta": {
+    "mean": -8.801235160341573e-07,
+    "std": 0.0001130501297716303
+  },
+  "EDA_62_LLD_SCR_meanDneg_delta": {
+    "mean": 1.380659213094437e-05,
+    "std": 0.00047969669587815685
+  },
+  "EDA_62_LLD_SCR_prop_delta": {
+    "mean": 3.0950868147847833e-07,
+    "std": 0.022108903693216567
+  },
+  "EDA_62_LLD_SCR_Xbound_delta": {
+    "mean": -0.08834204296585806,
+    "std": 6.965487607620941
+  },
+  "EDA_62_LLD_SCR_kurtosis_delta": {
+    "mean": 0.006493128066465453,
+    "std": 0.3185727441303226
+  },
+  "EDA_62_LLD_SCR_skewness_delta": {
+    "mean": 5.648593145541251e-05,
+    "std": 0.13223119001653144
+  },
+  "EDA_62_LLD_SCR_NSImn_delta": {
+    "mean": -9.679708688920832e-06,
+    "std": 0.023167556531230062
+  },
+  "EDA_62_LLD_SCR_NLDmn_delta": {
+    "mean": 0.0012756990652215113,
+    "std": 0.2749121947784135
+  }
+}

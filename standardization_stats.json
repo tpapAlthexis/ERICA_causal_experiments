@@ -1,0 +1,1158 @@
+{
+    "ComParE13_LLD_25Hz_F0final_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_jitterLocal_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_jitterDDP_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_shimmerLocal_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_logHNR_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audspec_lengthL1norm_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audspecRasta_lengthL1norm_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_zcr_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[0]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[1]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[2]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[3]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[4]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[5]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[6]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[7]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[8]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[9]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[10]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[11]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[12]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[13]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[14]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[15]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[16]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[17]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[18]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[19]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[20]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[21]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[22]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[23]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[24]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[25]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_fband250-650_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_fband1000-4000_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff25.0_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff50.0_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff75.0_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff90.0_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralVariance_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralSkewness_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralKurtosis_sma_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralSlope_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_harmonicity_sma_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[1]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[2]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[3]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[4]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[5]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[6]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[7]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[8]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[9]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[10]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[11]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[12]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[13]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma[14]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_F0final_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_jitterLocal_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_jitterDDP_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_shimmerLocal_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_logHNR_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audspec_lengthL1norm_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audspecRasta_lengthL1norm_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_zcr_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[0]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[1]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[2]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[3]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[4]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[5]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[6]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[7]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[8]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[9]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[10]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[11]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[12]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[13]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[14]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[15]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[16]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[17]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[18]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[19]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[20]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[21]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[22]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[23]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[24]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma_de[25]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_fband250-650_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_fband1000-4000_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff25.0_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff50.0_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff75.0_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralRollOff90.0_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralVariance_sma_de_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralSkewness_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralKurtosis_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralSlope_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_pcm_Mag_harmonicity_sma_de_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[1]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[2]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[3]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[4]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[5]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[6]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[7]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[8]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[9]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[10]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[11]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[12]_amean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[13]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ComParE13_LLD_25Hz_mfcc_sma_de[14]_amean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "audio_speech_probability_lstm_vad": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU1": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU2": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU4": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU5": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU6": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU7": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU9": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU11": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU12": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU15": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU17": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU20": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU23": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU24": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU25": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Yaw": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Pitch": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Roll": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Opt_mean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Opt_std": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU1_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU2_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU4_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU5_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU6_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU7_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU9_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU11_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU12_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU15_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU17_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU20_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU23_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU24_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_AU25_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Yaw_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Pitch_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Roll_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Opt_mean_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "VIDEO_40_LLD_Opt_std_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "Face_detection_probability": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_HR": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_HRV": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_zcr": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_1": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_2": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_3": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_4": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_5": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_6": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_7": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_8": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_9": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_10": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_11": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_12": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_entropy": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_mean_frequency": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_slope": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_mean": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_std": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_kurtosis": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_skewness": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_NSImn": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_NLDmn": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_VLF": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_LF": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_HF": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_LFHF": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_zcr_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_1_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_2_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_3_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_4_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_5_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_6_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_7_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_8_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_9_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_10_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_11_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_12_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_entropy_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_mean_frequency_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_FFT_slope_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_mean_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_std_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_kurtosis_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_skewness_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_NSImn_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_NLDmn_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_VLF_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_LF_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_HF_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "ECG_54_LLD_ECG_LFHF_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_time_code": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_slope": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_std": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_FFT_entropy": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_FFT_mean_frequency": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_mean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_meanD": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_meanDneg": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_prop": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_Xbound": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_kurtosis": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_skewness": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_NSImn": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_NLDmn": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_mean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_meanD": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_meanDneg": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_prop": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_Xbound": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_kurtosis": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_skewness": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_NSImn": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_NLDmn": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_mean": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_meanD": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_meanDneg": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_prop": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_Xbound": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_kurtosis": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_skewness": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_NSImn": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_NLDmn": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_slope_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_std_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_FFT_entropy_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_FFT_mean_frequency_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_mean_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_meanD_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_meanDneg_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_prop_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_Xbound_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_kurtosis_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_skewness_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_NSImn_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_EDA_NLDmn_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_mean_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_meanD_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_meanDneg_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_prop_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_Xbound_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_kurtosis_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_skewness_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_NSImn_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCL_NLDmn_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_mean_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_meanD_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_meanDneg_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_prop_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_Xbound_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_kurtosis_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_skewness_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_NSImn_delta": {
+        "mean": 0.0,
+        "std": 1.0
+    },
+    "EDA_62_LLD_SCR_NLDmn_delta": {
+        "mean": -0.0,
+        "std": 1.0
+    }
+}
