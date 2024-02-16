@@ -17,7 +17,7 @@ class EmotionEnum(Enum):
     valence = 1
 
 PARTICIPANT = 16
-FOLDS = 5
+FOLDS = 10
 EMOTION = EmotionEnum.arousal.value
 
 assert FOLDS > 0

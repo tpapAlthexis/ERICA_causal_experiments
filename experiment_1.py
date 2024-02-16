@@ -16,7 +16,7 @@ def getParticipants():
     participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names]
     return list(set(participants))
 
-FOLDS = [3, 5, 10] #keep odd symetry
+FOLDS = [2, 6, 10] 
 PARTICIPANTS = getParticipants()
 
 def runExperiment(participant, emotion, folds):
