@@ -19,3 +19,8 @@ def getParticipantTrainingPath(participant):
 
 def getAnnotationsPath(participant):
     return f'{PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
+
+def getParticipants():
+    file_names = os.listdir(PREPROCESSED_PATH)
+    participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names]
+    return list(set(participants))

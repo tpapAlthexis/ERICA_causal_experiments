@@ -4,9 +4,9 @@ __pycache__/
 *$py.class
 
 # Generated data folders
-data/experimental/
-PC_tests/
-Plots/
+data/experiments/*
+PC_tests/*
+Plots/*
 
 # C extensions
 *.so

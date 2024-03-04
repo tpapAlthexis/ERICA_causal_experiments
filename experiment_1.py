@@ -11,13 +11,8 @@ import measure_emotion_link as mel
 import globals as gl
 from measure_emotion_link import EmotionEnum
 
-def getParticipants():
-    file_names = os.listdir(gl.PREPROCESSED_PATH)
-    participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names]
-    return list(set(participants))
-
 FOLDS = [2, 6, 10] 
-PARTICIPANTS = getParticipants()
+PARTICIPANTS = gl.getParticipants()
 
 def runExperiment(participant, emotion, folds):
     sys.argv = ['measure_emotion_link.py', f'participant={participant}', f'folds={folds}', f'emotion={emotion.value}']
