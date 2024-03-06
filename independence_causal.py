@@ -1,3 +1,4 @@
+import io
 import globals as gl
 import pandas as pd
 import numpy as np
@@ -5,9 +6,13 @@ import sys
 import os
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import re
+import json
 
 from sklearn.model_selection import KFold
 from sklearn.decomposition import PCA
+from sklearn.decomposition import FastICA
 
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.utils.cit import fisherz
@@ -18,12 +23,26 @@ from causallearn.graph.GraphNode import GraphNode
 from causallearn.graph.Node import Node
 from causallearn.utils.GraphUtils import GraphUtils
 
-import networkx as nx
-import matplotlib.pyplot as plt
+# Constants
+AUDIO = 'audio'
+VIDEO = 'video'
+ECG = 'ecg'
+EDA = 'eda'
+OTHER = 'other'
+AROUSAL = 'arousal'
+VALENCE = 'valence'
 
+# Parameters
+PARTICIPANT = 19 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
+FOLDS = 10 # number of folds
+COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lower than 95% and PCs are more, then reduct to current number
+EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
+USE_ICA = True # use ICA instead of PCA
+ANALYSIS_FEATURES = [ECG, AROUSAL, VALENCE]
 
-PARTICIPANT = 23
-FOLDS = 10
+EXPERIMENT_SETUP = f'P{PARTICIPANT}_F{FOLDS}_C{COMPONENTS_THRESHOLD}_E{EDGE_CUTOFF}_ICA{USE_ICA}'
+EXPERIMENT_ATTR = ''
+
 expertiment_path = gl.EXPERIMENTAL_DATA_PATH + f'/independence/_P{PARTICIPANT}'
 if not os.path.exists(expertiment_path):
     os.makedirs(expertiment_path)
@@ -43,34 +62,38 @@ def readData(participant):
 
     return data_df, annotations_df
 
-def preprocess_data(data_df, annotations_df, components_threshold=50):
+def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=['']):
     categorized_data = categorize_columns(data_df)
-    pca_data = apply_pca_to_categories(categorized_data, 0.95, components_threshold)
+
+    if use_ica:
+        component_data = apply_ica_to_categories(categorized_data, 0.95, components_threshold, proc_logs)
+    else:
+        component_data = apply_pca_to_categories(categorized_data, 0.95, components_threshold, proc_logs)
 
     #print annotations first column title
     if annotations_df.columns.size > 2:
         print("Incopatible annotations size")
         sys.exit(0)
 
-    #concut pca_data , set as key the column's title and value the annotation data that follow
-    pca_data[annotations_df.columns[0]] = annotations_df[annotations_df.columns[0]]
-    pca_data[annotations_df.columns[1]] = annotations_df[annotations_df.columns[1]]
+    #concut component_data , set as key the column's title and value the annotation data that follow
+    component_data[annotations_df.columns[0]] = annotations_df[annotations_df.columns[0]]
+    component_data[annotations_df.columns[1]] = annotations_df[annotations_df.columns[1]]
 
     flattened_data = {}
     keys_to_remove = []
-    for category, data in pca_data.items():
+    for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
             for i in range(data.shape[1]):
-                new_key = f"{category}_pc_{i+1}"
+                new_key = f"{category}_comp_{i+1}"
                 flattened_data[new_key] = data[:, i]
             keys_to_remove.append(category)
 
-    # Remove the original multi-dimensional data from pca_data
+    # Remove the original multi-dimensional data from component_data
     for key in keys_to_remove:
-        pca_data.pop(key)
+        component_data.pop(key)
 
-    # Merge the flattened data with the original pca_data
-    pca_data.update(flattened_data)
+    # Merge the flattened data with the original component_data
+    component_data.update(flattened_data)
 
     # Remove columns with more than 50% of missing values
     data_df = data_df.dropna(thresh=data_df.shape[0] * 0.5, axis=1)
@@ -78,7 +101,7 @@ def preprocess_data(data_df, annotations_df, components_threshold=50):
     # Remove rows with missing values
     data_df = data_df.dropna()
 
-    return pd.DataFrame(pca_data)
+    return pd.DataFrame(component_data)
 
 # Function to categorize columns
 def categorize_columns(df):
@@ -89,15 +112,15 @@ def categorize_columns(df):
     other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
 
     return {
-        'audio': df[audio_features], #voice features
-        'video': df[video_features], #facial features
-        'ecg': df[ecg_features], #heart features, physiology
-        'eda': df[eda_features], #skin features, physiology
-        'other': df[other_features] #other features
+        AUDIO: df[audio_features], #voice features
+        VIDEO: df[video_features], #facial features
+        ECG: df[ecg_features], #heart features, physiology
+        EDA: df[eda_features], #skin features, physiology
+        OTHER: df[other_features] #other features
     }
 
 # Function to apply PCA to each category and retain components explaining 95% variance
-def apply_pca_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50):
+def apply_pca_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
     pca_results = {}
     print("-------------------")
     print("PCA results")
@@ -111,10 +134,43 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
 
         pca_results[category] = components
         
-        print(f"{category} - Original shape: {data.shape}, Reduced shape: {components.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f}")
+        pca_log = f"PCA{category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {components.shape[1]}, Reduced to components number: {components.shape[1]}"
+        proc_logs[0] += f"PCA setup:\n{pca_log}"
+        print(proc_logs[0])
 
     print("-------------------" )
     return pca_results
+
+#function to apply ICA 
+def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
+    pca_results = {}
+    ica_results = {}
+    print("-------------------")
+    print("ICA results")
+    for category, data in categorized_data.items():
+        pca = PCA(n_components=variance_threshold, svd_solver='full')  
+        pca_components = pca.fit_transform(data)
+        num_of_components = components_threshold if pca_components.shape[1] > components_threshold else pca_components.shape[1]
+
+        pca_results[category] = pca_components
+        proc_logs[0] = f"ICA logs:\nPCA pre-analysis cat: {category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {pca_components.shape[1]}, Reduced to components number: {num_of_components}"
+        print(proc_logs[0])
+        if pca_components.shape[1] > components_threshold:
+            pca = PCA(n_components=components_threshold, svd_solver='full')
+            pca_components = pca.fit_transform(data)
+            expl_log = f"Explained variance for {pca_components.shape[1]} components: {np.sum(pca.explained_variance_ratio_):.2f}"
+            proc_logs[0] += f"\n{expl_log}"
+            print(expl_log)
+
+        ica = FastICA(n_components=num_of_components, tol=0.1, random_state=0, max_iter=1000)
+        ica_components = ica.fit_transform(data)
+        ica_results[category] = ica_components
+        ica_log = f"ICA{category} - Original shape: {data.shape}, Reduced shape: {ica_components.shape}, Number of iterations: {ica.n_iter_} from max iterations: 1000"
+        proc_logs[0] += f"\n{ica_log}"
+        print(ica_log)
+    print("-------------------" )
+
+    return ica_results
 
 def save_graph(graph, labels, path):
     pyd = GraphUtils.to_pydot(graph, labels=labels)
@@ -145,8 +201,8 @@ def plot_histogram_edges(column_titles, edge_histogram):
     nx.draw_networkx_nodes(G, pos, node_color='lightblue')
     nx.draw_networkx_labels(G, pos)
     nx.draw_networkx_edges(G, pos, width=weights, edge_color='blue', alpha=0.5,
-                           arrowstyle='-|>', arrowsize=20,
-                           connectionstyle='arc3, rad = 0.1')
+                           arrowstyle='->', arrowsize=45,
+                           connectionstyle='arc3, rad = 0.2')
 
     # Draw edge labels
     edge_labels = nx.get_edge_attributes(G, 'weight')
@@ -154,7 +210,10 @@ def plot_histogram_edges(column_titles, edge_histogram):
 
     plt.show()
 
-def run_experiment(data_df):
+def run_experiment(data_df, folds=FOLDS):
+
+    kf = KFold(n_splits=folds, shuffle=False, random_state=None)
+
     fold_count = 1
     graphs = []
 
@@ -166,14 +225,9 @@ def run_experiment(data_df):
         try:
             # Run PC algorithm on train data
             cg_train = pc(train_data, 0.05, fisherz)
-            #cg_test = pc(test_data, 0.05, fisherz)
             
             gs = cg_train.G.__str__()
             print(f'Graph string:{gs}')
-            
-            # if '>' in gs:
-            #     save_graph(cg_train.G, column_titles, f'{expertiment_path}/graph_fold_{fold_count}.png')
-                #cg_train.draw_pydot_graph(labels=column_titles)
 
             graphs.append(cg_train)
             fold_count += 1
@@ -207,7 +261,7 @@ def get_edge_histogram(graphs, column_titles, edge_cutoff=5):
         
         #for each edge string replace 'X1' to 'Xn' with the column title
         for i in range(len(column_titles)):
-            set_edges = [edge.replace(f'X{i+1}', column_title_map[f'X{i+1}']) for edge in set_edges]
+            set_edges = [re.sub(r'\b' + f'X{i+1}' + r'\b', f'{column_title_map[f"X{i+1}"]}', edge) for edge in set_edges]
 
         for edge in set_edges:
             if edge in edge_histogram:
@@ -226,20 +280,61 @@ def get_edge_histogram(graphs, column_titles, edge_cutoff=5):
     return edge_histogram
 
 def create_new_graph(column_titles, edge_histogram):
-    final_nodes = []
-    for title in column_titles:
-        final_nodes.append(GraphNode(title))
+    try:
+        final_nodes = []
+        for title in column_titles:
+            final_nodes.append(GraphNode(title))
 
-    complete_graph = GeneralGraph(nodes=final_nodes)
-    for edge in edge_histogram:
-        edge_nodes = edge.split('-->')
-        #remove ' ' for each node
-        edge_nodes = [node.strip() for node in edge_nodes]
-        print(f'Edge nodes: {edge_nodes}')
+        complete_graph = GeneralGraph(nodes=final_nodes)
+        for edge in edge_histogram:
+            edge_nodes = edge.split('-->')
+            edge_nodes = [node.strip() for node in edge_nodes]
 
-        complete_graph.add_directed_edge(complete_graph.get_node(edge_nodes[0]), complete_graph.get_node(edge_nodes[1]))
+            complete_graph.add_directed_edge(complete_graph.get_node(edge_nodes[0]), complete_graph.get_node(edge_nodes[1]))
 
-    print(f'Graph: {complete_graph}')
+        return complete_graph
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        # Handle the error or raise it again if needed
+
+def get_graph_image(labels, edge_histogram):
+    try:
+        complete_graph = create_new_graph(labels, edge_histogram)
+
+        pyd = GraphUtils.to_pydot(complete_graph, labels=labels)
+        tmp_png = pyd.create_png(f="png")
+        fp = io.BytesIO(tmp_png)
+        img = mpimg.imread(fp, format='png')
+        return img
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+def create_graph_image(labels, edge_histogram, save_path):
+    try:
+        complete_graph = create_new_graph(labels, edge_histogram)
+
+        pyd = GraphUtils.to_pydot(complete_graph, labels=labels)
+        tmp_png = pyd.create_png(f="png")
+        fp = io.BytesIO(tmp_png)
+        img = mpimg.imread(fp, format='png')
+        
+        # Save png to path
+        with open(save_path, 'wb') as f:
+            f.write(tmp_png)
+
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+def draw_graph(labels, edge_histogram):
+    img = get_graph_image(labels, edge_histogram)
+
+    plt.rcParams["figure.figsize"] = [20, 12]
+    plt.rcParams["figure.autolayout"] = True
+    plt.figure(figsize=(12.5, 7.5))
+    plt.axis('off')
+    plt.imshow(img)
+
+    plt.show()
 
 if __name__ == "__main__":
 
@@ -247,17 +342,14 @@ if __name__ == "__main__":
     categorized_data, annotation_data = readData(PARTICIPANT)
 
     # Apply preprocessing to the data (PCA, flattening, etc.)
-    data_df = preprocess_data(categorized_data, annotation_data, components_threshold=3)
+    data_df = preprocess_data(categorized_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA)
 
-    kf = KFold(n_splits=FOLDS)
-
-    #select only data containing 'audio' or 'arousal' or 'valence' category (check if 'audio' is present in the column's title)
-    data_df = data_df[[col for col in data_df.columns if 'audio' in col or 'arousal' in col or 'valence' in col]]
+    #select only data containing the features we are interested in
+    data_df = data_df[[col for col in data_df.columns if any(feature in col for feature in ANALYSIS_FEATURES)]]
     column_titles = data_df.columns
 
     graphs = run_experiment(data_df)
-    edge_histogram = get_edge_histogram(graphs, column_titles, FOLDS/2)
+    edge_histogram = get_edge_histogram(graphs, column_titles, EDGE_CUTOFF)
     print(f'Edge histogram: {edge_histogram}')
-
-    plot_histogram_edges(column_titles, edge_histogram)
-
+    
+    draw_graph(column_titles, edge_histogram)
