@@ -33,7 +33,7 @@ AROUSAL = 'arousal'
 VALENCE = 'valence'
 
 # Parameters
-PARTICIPANT = 19 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
+PARTICIPANT = 16 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
 FOLDS = 10 # number of folds
 COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lower than 95% and PCs are more, then reduct to current number
 EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
@@ -141,7 +141,6 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
     print("-------------------" )
     return pca_results
 
-#function to apply ICA 
 def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
     pca_results = {}
     ica_results = {}
@@ -155,6 +154,7 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
         pca_results[category] = pca_components
         proc_logs[0] = f"ICA logs:\nPCA pre-analysis cat: {category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {pca_components.shape[1]}, Reduced to components number: {num_of_components}"
         print(proc_logs[0])
+        # Keep log of explained variance for the number of components used
         if pca_components.shape[1] > components_threshold:
             pca = PCA(n_components=components_threshold, svd_solver='full')
             pca_components = pca.fit_transform(data)
@@ -210,7 +210,7 @@ def plot_histogram_edges(column_titles, edge_histogram):
 
     plt.show()
 
-def run_experiment(data_df, folds=FOLDS):
+def run_experiment(data_df, folds=FOLDS, node_names=None):
 
     kf = KFold(n_splits=folds, shuffle=False, random_state=None)
 
@@ -218,13 +218,11 @@ def run_experiment(data_df, folds=FOLDS):
     graphs = []
 
     for train_index, test_index in kf.split(data_df):
-        # Split data into train and test
         train_data = data_df.iloc[train_index].values
-        test_data = data_df.iloc[test_index].values
 
         try:
             # Run PC algorithm on train data
-            cg_train = pc(train_data, 0.05, fisherz)
+            cg_train = pc(data=train_data, alpha=0.05, indep_test=fisherz, node_names=node_names)
             
             gs = cg_train.G.__str__()
             print(f'Graph string:{gs}')
@@ -238,30 +236,21 @@ def run_experiment(data_df, folds=FOLDS):
             continue
     return graphs
 
-def get_edge_histogram(graphs, column_titles, edge_cutoff=5):
-    #create a map from 'X1' to 'Xn' to the column title
-    column_title_map = {}
-    for i in range(len(column_titles)):
-        column_title_map[f'X{i+1}'] = column_titles[i]
-        
+def get_edge_histogram(graphs, edge_cutoff=5):
     #for each graph
     fold_num = 0
     edge_histogram = {}
     for graph in graphs:
         set_edges = set()
-        graph = graphs[fold_num].G
+        graph_general = graph.G
 
-        graph_nodes = graph.get_node_names()
+        graph_nodes = graph_general.get_node_names()
         for node1 in graph_nodes:
             for node2 in graph_nodes:
                 if node1 != node2:
-                    edge = graph.get_edge(graph.get_node(node1), graph.get_node(node2))
+                    edge = graph_general.get_edge(graph_general.get_node(node1), graph_general.get_node(node2))
                     if '>' in edge.__str__():
                         set_edges.add(edge.__str__())
-        
-        #for each edge string replace 'X1' to 'Xn' with the column title
-        for i in range(len(column_titles)):
-            set_edges = [re.sub(r'\b' + f'X{i+1}' + r'\b', f'{column_title_map[f"X{i+1}"]}', edge) for edge in set_edges]
 
         for edge in set_edges:
             if edge in edge_histogram:
@@ -279,11 +268,19 @@ def get_edge_histogram(graphs, column_titles, edge_cutoff=5):
 
     return edge_histogram
 
-def create_new_graph(column_titles, edge_histogram):
+def get_nodes_from_histogram(edge_histogram):
+    nodes = set()
+    for edge in edge_histogram:
+        edge_nodes = edge.split('-->')
+        edge_nodes = [node.strip() for node in edge_nodes]
+        nodes.add(edge_nodes[0])
+        nodes.add(edge_nodes[1])
+
+    return [GraphNode(node) for node in nodes]
+
+def create_new_graph(edge_histogram):
     try:
-        final_nodes = []
-        for title in column_titles:
-            final_nodes.append(GraphNode(title))
+        final_nodes = get_nodes_from_histogram(edge_histogram)
 
         complete_graph = GeneralGraph(nodes=final_nodes)
         for edge in edge_histogram:
@@ -294,40 +291,38 @@ def create_new_graph(column_titles, edge_histogram):
 
         return complete_graph
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"create_new_graph::An error occurred: {str(e)}")
         # Handle the error or raise it again if needed
 
-def get_graph_image(labels, edge_histogram):
+def get_graph_image(edge_histogram):
     try:
-        complete_graph = create_new_graph(labels, edge_histogram)
+        complete_graph = create_new_graph(edge_histogram)
 
-        pyd = GraphUtils.to_pydot(complete_graph, labels=labels)
+        pyd = GraphUtils.to_pydot(complete_graph)
         tmp_png = pyd.create_png(f="png")
-        fp = io.BytesIO(tmp_png)
-        img = mpimg.imread(fp, format='png')
-        return img
+        return tmp_png
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"get_graph_image::An error occurred: {str(e)}")
 
-def create_graph_image(labels, edge_histogram, save_path):
+def create_graph_image(edge_histogram, save_path):
     try:
-        complete_graph = create_new_graph(labels, edge_histogram)
+        complete_graph = create_new_graph(edge_histogram)
 
-        pyd = GraphUtils.to_pydot(complete_graph, labels=labels)
+        pyd = GraphUtils.to_pydot(complete_graph)
         tmp_png = pyd.create_png(f="png")
-        fp = io.BytesIO(tmp_png)
-        img = mpimg.imread(fp, format='png')
         
         # Save png to path
         with open(save_path, 'wb') as f:
             f.write(tmp_png)
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"create_graph_image::An error occurred: {str(e)}")
 
-def draw_graph(labels, edge_histogram):
-    img = get_graph_image(labels, edge_histogram)
-
+def draw_graph(edge_histogram):
+    png = get_graph_image(edge_histogram)
+    fp = io.BytesIO(png)
+    img = mpimg.imread(fp, format='png')
+    
     plt.rcParams["figure.figsize"] = [20, 12]
     plt.rcParams["figure.autolayout"] = True
     plt.figure(figsize=(12.5, 7.5))
@@ -348,8 +343,8 @@ if __name__ == "__main__":
     data_df = data_df[[col for col in data_df.columns if any(feature in col for feature in ANALYSIS_FEATURES)]]
     column_titles = data_df.columns
 
-    graphs = run_experiment(data_df)
-    edge_histogram = get_edge_histogram(graphs, column_titles, EDGE_CUTOFF)
+    graphs = run_experiment(data_df, node_names=column_titles)
+    edge_histogram = get_edge_histogram(graphs, edge_cutoff=EDGE_CUTOFF)
     print(f'Edge histogram: {edge_histogram}')
     
-    draw_graph(column_titles, edge_histogram)
+    draw_graph(edge_histogram)
