@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import re
 import json
+import warnings
 
 from sklearn.model_selection import KFold
 from sklearn.decomposition import PCA
@@ -57,10 +58,55 @@ def clear_data(data_df):
     return data_df
 
 def readData(participant):
-    data_df = clear_data(pd.read_csv(gl.getParticipantTrainingPath(participant)))
+    data_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant)))
     annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant)))
 
     return data_df, annotations_df
+
+def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
+    """
+    Validates the categorized data for PCA/ICA analysis.
+    
+    Parameters:
+    - categorized_data: dict, with categories as keys and pandas DataFrame/2D numpy array as values.
+    - min_samples: int, minimum number of samples required to proceed with the analysis.
+    - min_features: int, minimum number of features required to proceed with the analysis.
+    
+    Returns:
+    - valid_data: dict, containing only the categories with valid data for analysis.
+    - invalid_categories: list, categories that did not meet the validation criteria.
+    """
+    valid_data = {}
+    invalid_categories = []
+    
+    for category, data in categorized_data.items():
+        if isinstance(data, pd.DataFrame):
+            data_values = data.values
+        elif isinstance(data, np.ndarray):
+            data_values = data
+        else:
+            print(f"validate_categorized_data: Invalid data type for category '{category}'. Expecting pandas DataFrame or numpy array.")
+            invalid_categories.append(category)
+            continue
+        
+        if np.any(np.isnan(data_values)):
+            print(f"validate_categorized_data: Data for category '{category}' contains NaN values. Consider preprocessing to handle NaNs.")
+            invalid_categories.append(category)
+            continue
+        
+        if data_values.shape[0] < min_samples:
+            print(f"validate_categorized_data: Category '{category}' does not have enough samples ({data_values.shape[0]}). Minimum required is {min_samples}.")
+            invalid_categories.append(category)
+            continue
+        
+        if data_values.shape[1] < min_features:
+            print(f"validate_categorized_data: Category '{category}' does not have enough features ({data_values.shape[1]}). Minimum required is {min_features}.")
+            invalid_categories.append(category)
+            continue
+
+        valid_data[category] = data
+    
+    return valid_data, invalid_categories
 
 def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=['']):
     categorized_data = categorize_columns(data_df)
@@ -70,9 +116,12 @@ def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=US
     else:
         component_data = apply_pca_to_categories(categorized_data, 0.95, components_threshold, proc_logs)
 
-    #print annotations first column title
-    if annotations_df.columns.size > 2:
-        print("Incopatible annotations size")
+    if component_data is None:
+        print("preprocess_data: No component data. This is probably due to convergence failure or incopatible data size. Exiting...")
+        sys.exit(0)
+
+    if annotations_df.columns.size != 2:
+        print("preprocess_data: Incopatible annotations size")
         sys.exit(0)
 
     #concut component_data , set as key the column's title and value the annotation data that follow
@@ -94,12 +143,6 @@ def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=US
 
     # Merge the flattened data with the original component_data
     component_data.update(flattened_data)
-
-    # Remove columns with more than 50% of missing values
-    data_df = data_df.dropna(thresh=data_df.shape[0] * 0.5, axis=1)
-
-    # Remove rows with missing values
-    data_df = data_df.dropna()
 
     return pd.DataFrame(component_data)
 
@@ -144,9 +187,13 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
 def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
     pca_results = {}
     ica_results = {}
+    valid_data, invalid_categories = validate_categorized_data(categorized_data)
+    if invalid_categories:
+        print("Some categories were invalid and will be skipped:", invalid_categories)
+
     print("-------------------")
     print("ICA results")
-    for category, data in categorized_data.items():
+    for category, data in valid_data.items():
         pca = PCA(n_components=variance_threshold, svd_solver='full')  
         pca_components = pca.fit_transform(data)
         num_of_components = components_threshold if pca_components.shape[1] > components_threshold else pca_components.shape[1]
@@ -162,8 +209,18 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
             proc_logs[0] += f"\n{expl_log}"
             print(expl_log)
 
-        ica = FastICA(n_components=num_of_components, tol=0.1, random_state=0, max_iter=1000)
-        ica_components = ica.fit_transform(data)
+        try:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                ica = FastICA(n_components=num_of_components, tol=0.1, random_state=0, max_iter=1000)
+                ica_components = ica.fit_transform(data)
+                if len(w) > 0 and "did not converge" in str(w[-1].message):
+                    raise UserWarning("ICA failed to converge")
+        except UserWarning as e:
+            print(f'apply_ica_to_categories: converge failure - {str(e)}')
+            proc_logs[0] += f"ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
+            continue
+
         ica_results[category] = ica_components
         ica_log = f"ICA{category} - Original shape: {data.shape}, Reduced shape: {ica_components.shape}, Number of iterations: {ica.n_iter_} from max iterations: 1000"
         proc_logs[0] += f"\n{ica_log}"

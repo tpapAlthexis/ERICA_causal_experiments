@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import sys
 import numpy as np
 
-PARTICIPANTS = [64,65]#gl.getParticipants()
+PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
 USE_ICA = True
 FOLDS = ic.FOLDS
@@ -33,19 +33,19 @@ def create_comp_plot_image(graph_plots, feat, path):
     images = []
     for participant in graph_plots:
         img_data = graph_plots[participant]
-        img = Image.open(BytesIO(img_data))  # Convert bytes to image
-        font = ImageFont.truetype('arial.ttf', 45)  # You may need to adjust the font path and size
+        img = Image.open(BytesIO(img_data))  
+        font = ImageFont.truetype('arial.ttf', 45) 
         images.append((participant, img))
 
     # Create a new image with the height equal to the sum of all image heights and line images
     total_height = sum(img.height for participant, img in images) + 100 * (len(images) + 1)
     max_width = max(img.width for participant, img in images)
-    composed_image = Image.new('RGBA', (max_width, total_height), 'white')  # Use white background
+    composed_image = Image.new('RGBA', (max_width, total_height), 'white') 
 
     # Add measure title to the top of the composed image
-    title_image = Image.new('RGBA', (max_width, 100), 'white')  # Create a larger white image
+    title_image = Image.new('RGBA', (max_width, 100), 'white') 
     title_draw = ImageDraw.Draw(title_image)
-    title_font = ImageFont.truetype('arialbd.ttf', 60)  # You may need to adjust the font path and size
+    title_font = ImageFont.truetype('arialbd.ttf', 60)
     title_text = f'Measure: {feat}'
     title_width, title_height = [200, 100]
     title_draw.text(((max_width - title_width) / 2, (100 - title_height) / 2), title_text, fill='black', font=title_font)
@@ -98,7 +98,7 @@ def run_causal_emotion_experiment(participant, analysis_features):
 
 def run_experiment():
     const_features = [ic.AROUSAL, ic.VALENCE] 
-    features = [ic.AUDIO]#[ic.AUDIO, ic.VIDEO, ic.ECG, ic.EDA, ic.OTHER]
+    features = [ic.AUDIO, ic.VIDEO, ic.ECG, ic.EDA, ic.OTHER]
 
     experiment_res_dict = {}
     path = create_experiment_folder_path()

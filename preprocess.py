@@ -67,8 +67,8 @@ def get_samples_csv(path, file_name, save_file=False, gen_histograms=False):
     df = df.drop(columns=ignore_columns)
 
     try:
-        win_sz = time_window_for_step_size(3)
-        step_size = step_size_to_rows(400)
+        win_sz = time_window_for_step_size(3) #sliding window of 3 seconds
+        step_size = step_size_to_rows(400) #step size of 400ms
     except ValueError as e:
         print("get_samples_csv::Error in calculating time window or step size in get_samples_csv.")
         print(e)

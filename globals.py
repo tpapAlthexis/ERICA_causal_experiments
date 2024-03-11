@@ -14,7 +14,7 @@ DEFAULT_INPUT_DATA_PATH = 'data/RECOLA-DATA'
 
 EXPERIMENTAL_DATA_PATH = 'data/experiments'
 
-def getParticipantTrainingPath(participant):
+def getParticipantStandardizedPath(participant):
     return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
 
 def getAnnotationsPath(participant):

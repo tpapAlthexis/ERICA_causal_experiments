@@ -39,7 +39,7 @@ def calculate_shd_scores(G1, G2, normalization_factor=1.0):
 
 def trainProcedure(participant=PARTICIPANT, folds=FOLDS, emotion=EMOTION):
     # Load data from csv file to DataFrame
-    data_df = pd.read_csv(gl.getParticipantTrainingPath(participant))
+    data_df = pd.read_csv(gl.getParticipantStandardizedPath(participant))
     annotations_df = pd.read_csv(gl.getAnnotationsPath(participant))
     
     #find and delete 'time' column from both dataframes

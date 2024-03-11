@@ -3,8 +3,13 @@ import numpy as np
 import pandas as pd
 import sys
 import json
+from sklearn.preprocessing import StandardScaler
 
 import globals as gl
+
+#filter warnings for feature names
+import warnings
+warnings.filterwarnings('ignore', message="X has feature names, but StandardScaler was fitted without feature names")
 
 STANDARDIZED_PARAMS_JSON_PATH = gl.STANDARDIZED_PATH + '/standardization_params.json'
 
@@ -43,26 +48,36 @@ def strip_csv_column(file_path, column_name):
     return df
 
 def standarize_csv(file_path, standardization_params):
-    df = read_csv_file(file_path)
+    df = pd.read_csv(file_path)
     if df.empty:
         print(f"standarize_csv::File {file_path} is empty.")
         return False
     
-    for col in df.columns:
-        if col in standardization_params:
-            df[col] = (df[col] - standardization_params[col]['mean']) / standardization_params[col]['std']
-    
-    savePath = gl.STANDARDIZED_PATH + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
-    if not os.path.exists(gl.STANDARDIZED_PATH):
-        os.makedirs(gl.STANDARDIZED_PATH)
-    df.to_csv(savePath)
+    try:
+        scaler = StandardScaler()
+        
+        for col in df.columns:
+            if col in standardization_params:
+                scaler.mean_ = standardization_params[col]['mean']
+                scaler.scale_ = standardization_params[col]['std']
+                df[col] = scaler.transform(df[[col]])
+        
+        savePath = gl.STANDARDIZED_PATH + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
+        if not os.path.exists(gl.STANDARDIZED_PATH):
+            os.makedirs(gl.STANDARDIZED_PATH)
+        df.to_csv(savePath, index=False)
+    except Exception as e:
+        print(f"standarize_csv::An error occurred while standardizing the file {file_path}.")
+        print(e)
+        return False
     
     print(f"standarize_csv::File {file_path} has been standardized and saved to {savePath}.")
     return True
     
 if __name__ == "__main__":
-    arg_path =  gl.DEFAULT_INPUT_DATA_PATH if len(sys.argv) < 2 else sys.argv[1]
+    arg_path =  gl.PREPROCESSED_PATH if len(sys.argv) < 2 else sys.argv[1]
     path = arg_path if os.path.exists(arg_path) else str(gl.CURRENT_DIR_PATH + '/' + arg_path)
+    print(f"Standardizing files in path: {path}")
     if not os.path.exists(path):
         print(f"Path {path} does not exist.")
         sys.exit(1)
@@ -88,22 +103,24 @@ if __name__ == "__main__":
     
     standardization_params = {}
     total_files = len(csv_files)
-    
+
     print("Starting standardization param calculation...")
+    scaler = StandardScaler()
+
     for col in columns_titles:
-        standardization_params[col] = {}
-        standardization_params[col]['mean'] = 0.00
-        standardization_params[col]['std'] = 0.00
-        
+        data = []
         for i, file in enumerate(csv_files):
-            df = read_csv_file(path + '/' + file)
-            standardization_params[col]['mean'] += df[col].mean()
-            standardization_params[col]['std'] += df[col].std()
+            df = pd.read_csv(path + '/' + file)
+            data.extend(df[col].tolist())
         
-        standardization_params[col]['mean'] /= total_files
-        standardization_params[col]['std'] /= total_files
+        data = pd.DataFrame(data, columns=[col])
+        scaler.fit(data)
         
-        print(f"Modality '{col}' - Mean: {standardization_params[col]['mean']:.2f}, Std: {standardization_params[col]['std']:.2f}")
+        standardization_params[col] = {}
+        standardization_params[col]['mean'] = scaler.mean_[0]
+        standardization_params[col]['std'] = np.sqrt(scaler.var_[0])
+        
+        print(f"Measure '{col}' - Mean: {standardization_params[col]['mean']:.2f}, Std: {standardization_params[col]['std']:.2f}")
         #write standardization_params to json file
         with open(STANDARDIZED_PARAMS_JSON_PATH, 'w') as file:
            json.dump(standardization_params, file, indent=4)
