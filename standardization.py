@@ -63,6 +63,12 @@ def standarize_csv(file_path, standardization_params):
                 df[col] = scaler.transform(df[[col]])
         
         savePath = gl.STANDARDIZED_PATH + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
+
+        #calculate new mean and std to ensure that the standardization was successful
+        for col in df.columns:
+            if col in standardization_params:
+                print(f"Measure '{col}' - New Mean: {df[col].mean():.2f}, New Std: {df[col].std():.2f}")
+
         if not os.path.exists(gl.STANDARDIZED_PATH):
             os.makedirs(gl.STANDARDIZED_PATH)
         df.to_csv(savePath, index=False)
@@ -107,32 +113,27 @@ if __name__ == "__main__":
     print("Starting standardization param calculation...")
     scaler = StandardScaler()
 
-    for col in columns_titles:
-        data = []
-        for i, file in enumerate(csv_files):
-            df = pd.read_csv(path + '/' + file)
-            data.extend(df[col].tolist())
-        
-        data = pd.DataFrame(data, columns=[col])
-        scaler.fit(data)
-        
-        standardization_params[col] = {}
-        standardization_params[col]['mean'] = scaler.mean_[0]
-        standardization_params[col]['std'] = np.sqrt(scaler.var_[0])
-        
-        print(f"Measure '{col}' - Mean: {standardization_params[col]['mean']:.2f}, Std: {standardization_params[col]['std']:.2f}")
-        #write standardization_params to json file
-        with open(STANDARDIZED_PARAMS_JSON_PATH, 'w') as file:
-           json.dump(standardization_params, file, indent=4)
-    print("Standardization param calculation finished.")
-    
     success_count = 0
     failure_count = 0
     failed_files = []
-    
-    print("Starting standardization...")
+
     for file_name in csv_files:
         print(f'-------- Standardizing {file_name} ----------')
+        
+        df = pd.read_csv(path + '/' + file_name)
+        standardization_params = {}
+        
+        for col in columns_titles:
+            data = df[col].tolist()
+            data = pd.DataFrame(data, columns=[col])
+            scaler.fit(data)
+            
+            standardization_params[col] = {}
+            standardization_params[col]['mean'] = scaler.mean_[0]
+            standardization_params[col]['std'] = np.sqrt(scaler.var_[0])
+            
+            print(f"Measure '{col}' - Mean: {standardization_params[col]['mean']:.2f}, Std: {standardization_params[col]['std']:.2f}")
+        
         status = standarize_csv(path + '/' + file_name, standardization_params)
         
         if status:
@@ -141,6 +142,23 @@ if __name__ == "__main__":
             failure_count += 1
             failed_files.append(file_name)
         print(f'---------------------------------')
+
+    #standardize annotations for each participant
+    print("Standardizing annotations...")
+    participants = gl.getParticipants()
+    for participant in participants:
+        print(f"Standardizing annotations for participant {participant}...")
+        annotations_df = pd.read_csv(gl.getAnnotationsPath(participant))
+        annotations_df = annotations_df.drop(columns=['time'])
+        annotations_df = annotations_df.dropna()
+        annotations_df = annotations_df.reset_index(drop=True)
+        for col in annotations_df.columns:
+            data = annotations_df[col].tolist()
+            data = pd.DataFrame(data, columns=[col])
+            scaler.fit(data)
+            annotations_df[col] = scaler.transform(annotations_df[[col]])
+
+        annotations_df.to_csv(gl.getAnnotationsPathStd(participant), index=False)
         
     print('\n')
     print(f'Total successful operations: {success_count}')

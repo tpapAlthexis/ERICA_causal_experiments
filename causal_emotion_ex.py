@@ -6,15 +6,25 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import matplotlib.pyplot as plt
+import pandas as pd
 import sys
 import numpy as np
+from sklearn.model_selection import GroupKFold
+
+from bokeh.plotting import figure, output_file, save
+from bokeh.layouts import layout, column
+from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.io import curdoc
+from bokeh.models.widgets import Div
 
 PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
 USE_ICA = True
-FOLDS = ic.FOLDS
+FOLDS = 9
 EDGE_CUTOFF = FOLDS / 2
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+RUN_FOR_ALL_PARTICIPANTS = True
+EXPERIMENT_MEASURES = [ic.OTHER]#[ic.AUDIO, ic.EDA, ic.ECG, ic.VIDEO, ic.OTHER]
 
 class ExperimentEnum(Enum):
     Setup = 0
@@ -79,26 +89,54 @@ def create_experiment_folder_path():
     return EXPERIMENT_FOLDER_PATH
 
 def run_causal_emotion_experiment(participant, analysis_features):
-    categorized_data, annotation_data = ic.readData(participant)
+    measure_data, annotation_data = ic.readData(participant)
 
     exp_dict = {}
     exp_setup = {ExperimentSetup.Participant.name: participant, ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
     exp_dict[ExperimentEnum.Setup.name] = exp_setup
     exp_dict[ExperimentEnum.Preproc_logs.name] = ['']
-    # Apply preprocessing to the data (PCA, flattening, etc.)
-    data_df = ic.preprocess_data(categorized_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA, exp_dict[ExperimentEnum.Preproc_logs.name])
-
-    #select only data containing the features we are interested in
-    data_df = data_df[[col for col in data_df.columns if any(feature in col for feature in analysis_features)]]
+    # Apply preprocessing to the data (categorization, ICA, flattening, etc.)
+    data_df = ic.preprocess_data(measure_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA, exp_dict[ExperimentEnum.Preproc_logs.name], analysis_features)
 
     graphs = ic.run_experiment(data_df, folds=FOLDS, node_names=data_df.columns)
     exp_dict[ExperimentEnum.Graphs.name] = graphs
 
     return exp_dict
 
-def run_experiment():
+def run_experiment_for_all_p(analysis_features):
+    measure_data, annotation_data = ic.readDataAll_p(analysis_features)
+
+    exp_dict = {}
+    exp_setup = {ExperimentSetup.Participant.name: "All participants", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
+    exp_dict[ExperimentEnum.Setup.name] = exp_setup
+    exp_dict[ExperimentEnum.Preproc_logs.name] = ['']
+
+    # groupKfold where each group is participant's data length - assuming that annotations match the measure data
+    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant)))) for participant in gl.getParticipants()]
+    groups = [i for i in range(len(groups_sizes)) for _ in range(groups_sizes[i])]
+
+    cv_g = GroupKFold(n_splits=FOLDS)
+
+    # Apply preprocessing to the data (categorization, ICA, flattening, etc.)
+    data_df = ic.preprocess_data(measure_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA, exp_dict[ExperimentEnum.Preproc_logs.name], analysis_features)
+    exp_folds = 9
+    for feat in analysis_features:
+        exp_dict[feat] = {}
+        #select data for the feature + arousal and valence. i.e. sound check for audio features
+        exp_data_df = ic.get_category_features(data_df, feat, True)
+        graphs = ic.run_experiment(exp_data_df, folds=exp_folds, node_names=exp_data_df.columns, cv=cv_g, groups=groups)
+        if graphs is None:
+            print(f'No graphs detected for feature {feat}')
+            continue
+        exp_dict[feat][ExperimentEnum.Graphs.name] = graphs
+        
+        edge_histogram = ic.get_edge_histogram(exp_dict[feat][ExperimentEnum.Graphs.name], EDGE_CUTOFF)
+        ic.create_graph_image(edge_histogram, os.path.join(EXPERIMENT_FOLDER_PATH, f'{feat}_all_p_graph.png'))
+
+    return exp_dict
+
+def run_experiment(features = EXPERIMENT_MEASURES):
     const_features = [ic.AROUSAL, ic.VALENCE] 
-    features = [ic.AUDIO, ic.VIDEO, ic.ECG, ic.EDA, ic.OTHER]
 
     experiment_res_dict = {}
     path = create_experiment_folder_path()
@@ -119,12 +157,7 @@ def run_experiment():
 
     return experiment_res_dict
 
-if __name__ == "__main__":
-
-    path = create_experiment_folder_path()
-
-    res = run_experiment()
-
+def create_save_histograms(res, path):
     for feat in res:
         edge_histogram = {}
         participant_values = []
@@ -139,7 +172,11 @@ if __name__ == "__main__":
                 else:
                     edge_histogram[edge] = tmp_edge_histogram[edge]
 
-            participant_values.append(sum(tmp_edge_histogram.values()) / len(tmp_edge_histogram))
+            if len(tmp_edge_histogram) > 0:
+                participant_values.append(sum(tmp_edge_histogram.values()) / len(tmp_edge_histogram))
+            else:
+                print(f'Participant {participant} has no detected directional edges for feature {feat}')
+                participant_values.append(0)
 
         max_edge_count = len(res[feat]) * FOLDS
         scaled_edge_histogram = {k: v / max_edge_count for k, v in edge_histogram.items()}
@@ -167,9 +204,133 @@ if __name__ == "__main__":
 
         plt.xticks([])  # Make x-axis labels invisible
 
+        plt.savefig(os.path.join(path, f'{feat}_histogram.png'))  # Save the figure before showing it
         plt.show()
-        #plt.savefig(os.path.join(path, f'{feat}_histogram.png'))
         plt.close()
 
         edge_histogram = {k: v for k, v in edge_histogram.items() if v >= max_edge_count / 2}
         ic.draw_graph(edge_histogram)
+
+def create_save_histograms_all_p(res, path):
+    for feat in res:
+        if not feat in [ic.AUDIO, ic.ECG, ic.VIDEO, ic.EDA, ic.OTHER]:
+            continue 
+
+        edge_histogram = {}
+       
+        #get all edge data wihout cutoffs
+        tmp_edge_histogram = ic.get_edge_histogram(res[feat][ExperimentEnum.Graphs.name], 0)
+        #append the edge_histograms
+        for edge in tmp_edge_histogram:
+            if edge in edge_histogram:
+                edge_histogram[edge] += tmp_edge_histogram[edge]
+            else:
+                edge_histogram[edge] = tmp_edge_histogram[edge]
+
+        max_edge_count = len(res[feat]) * FOLDS
+        scaled_edge_histogram = {k: v / max_edge_count for k, v in edge_histogram.items()}
+        
+        scaled_edge_histogram = {k: v for k, v in sorted(scaled_edge_histogram.items(), key=lambda item: item[1], reverse=True)}
+
+        #create a histogram image for the feature
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(scaled_edge_histogram.keys(), scaled_edge_histogram.values(), color='b')
+        plt.xlabel('Edges')
+        plt.ylabel('Frequency')
+        plt.title(f'Histogram for {feat}')
+        plt.grid(True)
+
+        # Print labels vertically inside each corresponding bin
+        for bar, label in zip(bars, scaled_edge_histogram.keys()):
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height()/2, label, ha='center', va='bottom', rotation=90, fontsize=8, color='red', weight='bold')
+
+        plt.xticks([])  # Make x-axis labels invisible
+
+        plt.savefig(os.path.join(path, f'{feat}_histogram.png'), dpi=300)  # Save the figure before showing it with higher resolution
+        plt.show()
+        plt.close()
+
+        edge_histogram = {k: v for k, v in edge_histogram.items() if v >= max_edge_count / 2}
+        ic.draw_graph(edge_histogram)
+
+def create_experiment_report(exp_dict, path):
+    # Set the output file
+    output_file(os.path.join(path, "experiment_report.html"))
+
+    # Create the document title and setup information
+    experiment_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    doc_title = Div(text=f"<h1>Experiment Date and Time: {experiment_datetime}</h1>")
+    
+    setup_text = "<h2>Experiment Setup:</h2>"
+    for key, value in exp_dict['Setup'].items():
+        setup_text += f"<b>{key}:</b> {value}<br>"
+    
+    experiment_setup = Div(text=setup_text)
+    
+    preproc_logs_text = "<h2>Preprocessing Logs:</h2>" + "<br>".join(exp_dict['Preproc_logs'])
+    preproc_logs = Div(text=preproc_logs_text)
+
+    # List to hold all sections for layout
+    layout_sections = [doc_title, experiment_setup, preproc_logs]
+
+    # Process each measure
+    for feat in exp_dict:
+        if feat == 'Setup' or feat == 'Preproc_logs':
+            continue  # Skip non-measure data
+
+        # Process each measure data
+        edge_histogram = ic.get_edge_histogram(res[feat][ExperimentEnum.Graphs.name], 0)
+
+        # a) Histogram data in text
+        histogram_text = f"<h3>Histogram Data for {feat}</h3>"
+        for edge, count in edge_histogram.items():
+            normalized_value = count / sum(edge_histogram.values())
+            histogram_text += f"Edge: {edge}, Count: {count}, Normalized: {normalized_value:.2f}<br>"
+        
+        histogram_div = Div(text=histogram_text)
+        layout_sections.append(histogram_div)
+
+        # b) Interactive histogram with Bokeh
+        edges = list(edge_histogram.keys())
+        counts = list(edge_histogram.values())
+        source = ColumnDataSource(data=dict(edges=edges, counts=counts))
+        
+        p = figure(x_range=edges, height=250, title=f"Histogram for {feat}",
+                   toolbar_location=None, tools="")
+        p.vbar(x='edges', top='counts', width=0.9, source=source)
+        
+        p.y_range.start = 0
+        p.xgrid.grid_line_color = None
+        p.xaxis.major_label_orientation = 1.57  # Rotate labels vertically
+        p.add_tools(HoverTool(tooltips=[("Edge", "@edges"), ("Count", "@counts")]))
+
+        layout_sections.append(p)
+
+        # c) The graph image (You need to add the path to your image file)
+        graph_image_path = os.path.join(path, f'{feat}_composed.png')  # Adjust path as necessary
+        graph_image = Div(text=f'<img src="{graph_image_path}" alt="Graph Image for {feat}">', width=800)
+        layout_sections.append(graph_image)
+
+    # Finalize layout and save
+    l = column(layout_sections, sizing_mode='scale_width')
+    curdoc().add_root(l)
+    save(l)
+
+if __name__ == "__main__":
+
+    path = create_experiment_folder_path()
+
+    if RUN_FOR_ALL_PARTICIPANTS:
+        res = run_experiment_for_all_p(EXPERIMENT_MEASURES)
+        # create_save_histograms_all_p(res, path)
+        create_experiment_report(res, path)
+        print(f'Experimental setup: {res[ExperimentEnum.Setup.name]}')
+        print(f'Experiment preprocessing logs: {res[ExperimentEnum.Preproc_logs.name]}')
+        print('Experiment for all participants finished')
+    else:
+        res = run_experiment(EXPERIMENT_MEASURES)
+        create_save_histograms(res, path)
+
+    
+
+    

@@ -12,6 +12,7 @@ import json
 import warnings
 
 from sklearn.model_selection import KFold
+from sklearn.model_selection import GroupKFold
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FastICA
 
@@ -33,9 +34,16 @@ OTHER = 'other'
 AROUSAL = 'arousal'
 VALENCE = 'valence'
 
+Measure_Category_Prefixes = {
+    AUDIO: 'ComParE',
+    VIDEO: 'VIDEO',
+    ECG: 'ECG',
+    EDA: 'EDA'
+}
+
 # Parameters
 PARTICIPANT = 16 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
-FOLDS = 10 # number of folds
+FOLDS = 5 # number of folds
 COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lower than 95% and PCs are more, then reduct to current number
 EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
 USE_ICA = True # use ICA instead of PCA
@@ -61,6 +69,37 @@ def readData(participant):
     data_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant)))
     annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant)))
 
+    return data_df, annotations_df
+
+def readDataAll_p(measures_list):
+    participants = gl.getParticipants()
+
+    data = {}
+    annotations = []
+
+    #read data and annotations for each measure and for all participants
+    for measure in measures_list:
+        data_measure = []
+        for participant in participants:
+            data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant)))
+
+            #keep only the features we are interested in
+            if not measure == OTHER:
+                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(Measure_Category_Prefixes[measure])]]
+            else:
+                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if not any(prefix in col for prefix in Measure_Category_Prefixes.values())]]
+    
+            data_measure.append(data_measure_df)
+        
+        data[measure] = pd.concat(data_measure)
+
+    for participant in participants:
+        annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant)))
+        annotations.append(annotations_df)
+
+    data_df = pd.concat(data.values(), axis=1)
+    annotations_df = pd.concat(annotations)
+           
     return data_df, annotations_df
 
 def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
@@ -108,8 +147,11 @@ def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
     
     return valid_data, invalid_categories
 
-def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=['']):
+def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=[''], analysis_features=None):
     categorized_data = categorize_columns(data_df)
+    #keep only the features we are interested in
+    if analysis_features:
+        categorized_data = {key: value for key, value in categorized_data.items() if key in analysis_features}
 
     if use_ica:
         component_data = apply_ica_to_categories(categorized_data, 0.95, components_threshold, proc_logs)
@@ -148,10 +190,10 @@ def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=US
 
 # Function to categorize columns
 def categorize_columns(df):
-    audio_features = [col for col in df.columns if col.startswith('ComParE')]
-    video_features = [col for col in df.columns if col.startswith('VIDEO')]
-    ecg_features = [col for col in df.columns if col.startswith('ECG')]
-    eda_features = [col for col in df.columns if col.startswith('EDA')]
+    audio_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[AUDIO])]
+    video_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[VIDEO])]
+    ecg_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[ECG])]
+    eda_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[EDA])]
     other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
 
     return {
@@ -161,6 +203,12 @@ def categorize_columns(df):
         EDA: df[eda_features], #skin features, physiology
         OTHER: df[other_features] #other features
     }
+
+def get_category_features(df, category, contain_annotations=False):
+    if not contain_annotations:
+        return df[[col for col in df.columns if category in col]].copy()
+    else:
+        return df[[col for col in df.columns if (category in col) or ('arousal'in col or 'valence' in col)]].copy()
 
 # Function to apply PCA to each category and retain components explaining 95% variance
 def apply_pca_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
@@ -199,14 +247,14 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
         num_of_components = components_threshold if pca_components.shape[1] > components_threshold else pca_components.shape[1]
 
         pca_results[category] = pca_components
-        proc_logs[0] = f"ICA logs:\nPCA pre-analysis cat: {category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {pca_components.shape[1]}, Reduced to components number: {num_of_components}"
+        proc_logs[0] = f"-PCA pre-analysis, Measure category: {category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {pca_components.shape[1]}, Reduced to components number: {num_of_components}"
         print(proc_logs[0])
         # Keep log of explained variance for the number of components used
         if pca_components.shape[1] > components_threshold:
             pca = PCA(n_components=components_threshold, svd_solver='full')
             pca_components = pca.fit_transform(data)
             expl_log = f"Explained variance for {pca_components.shape[1]} components: {np.sum(pca.explained_variance_ratio_):.2f}"
-            proc_logs[0] += f"\n{expl_log}"
+            proc_logs[0] += f" -{expl_log}"
             print(expl_log)
 
         try:
@@ -222,7 +270,7 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
             continue
 
         ica_results[category] = ica_components
-        ica_log = f"ICA{category} - Original shape: {data.shape}, Reduced shape: {ica_components.shape}, Number of iterations: {ica.n_iter_} from max iterations: 1000"
+        ica_log = f"ICA run: measure category: {category} - Original shape: {data.shape}, Reduced shape: {ica_components.shape}, Number of iterations: {ica.n_iter_} from max iterations: 1000"
         proc_logs[0] += f"\n{ica_log}"
         print(ica_log)
     print("-------------------" )
@@ -267,15 +315,27 @@ def plot_histogram_edges(column_titles, edge_histogram):
 
     plt.show()
 
-def run_experiment(data_df, folds=FOLDS, node_names=None):
+def run_experiment(data_df, folds=FOLDS, node_names=None, cv=None, groups=None):
 
-    kf = KFold(n_splits=folds, shuffle=False, random_state=None)
+    if cv is None:
+        cv = KFold(n_splits=folds, shuffle=False, random_state=None)
+    elif isinstance(cv, GroupKFold):
+        if groups is None:
+            print("run_experiment: GroupKFold is specified but groups are not provided.")
+            return
+    else:
+        if groups is None:
+            print("run_experiment: Cv is specified but groups are not provided.")
 
     fold_count = 1
     graphs = []
 
-    for train_index, test_index in kf.split(data_df):
+    for train_index, test_index in cv.split(data_df, groups=groups):
         train_data = data_df.iloc[train_index].values
+
+        # print indices of the columns that are used in the train data
+        print(f'Fold {fold_count} - Train data columns: {train_index}. Test data columns: {test_index}')
+        print(f'Fold {fold_count} - Train data shape: {train_data.shape}. Test data shape: {data_df.iloc[test_index].values.shape}')
 
         try:
             # Run PC algorithm on train data
@@ -294,6 +354,9 @@ def run_experiment(data_df, folds=FOLDS, node_names=None):
     return graphs
 
 def get_edge_histogram(graphs, edge_cutoff=5):
+    if not graphs:
+        print("get_edge_histogram: No graphs provided.")
+        return
     #for each graph
     fold_num = 0
     edge_histogram = {}
