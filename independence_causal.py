@@ -34,6 +34,8 @@ OTHER = 'other'
 AROUSAL = 'arousal'
 VALENCE = 'valence'
 
+LOG_SEPARATOR = '$'
+
 Measure_Category_Prefixes = {
     AUDIO: 'ComParE',
     VIDEO: 'VIDEO',
@@ -226,8 +228,8 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
         pca_results[category] = components
         
         pca_log = f"PCA{category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {components.shape[1]}, Reduced to components number: {components.shape[1]}"
-        proc_logs[0] += f"PCA setup:\n{pca_log}"
-        print(proc_logs[0])
+        proc_logs[category] += f"PCA setup:\n{pca_log}"
+        print(proc_logs[category])
 
     print("-------------------" )
     return pca_results
@@ -247,14 +249,14 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
         num_of_components = components_threshold if pca_components.shape[1] > components_threshold else pca_components.shape[1]
 
         pca_results[category] = pca_components
-        proc_logs[0] = f"-PCA pre-analysis, Measure category: {category} - Original shape: {data.shape}, Explained variance: {np.sum(pca.explained_variance_ratio_):.2f} for {pca_components.shape[1]}, Reduced to components number: {num_of_components}"
-        print(proc_logs[0])
+        proc_logs[category] = f"Pre-analysis: PCA{LOG_SEPARATOR}Measure category: {category}{LOG_SEPARATOR}Original shape: {data.shape}{LOG_SEPARATOR}Explained variance: {100.00 * np.sum(pca.explained_variance_ratio_):.2f}% for {pca_components.shape[1]} components{LOG_SEPARATOR}Reduced to components number: {num_of_components}"
+        print(proc_logs[category])
         # Keep log of explained variance for the number of components used
         if pca_components.shape[1] > components_threshold:
             pca = PCA(n_components=components_threshold, svd_solver='full')
             pca_components = pca.fit_transform(data)
             expl_log = f"Explained variance for {pca_components.shape[1]} components: {np.sum(pca.explained_variance_ratio_):.2f}"
-            proc_logs[0] += f" -{expl_log}"
+            proc_logs[category] += f"{LOG_SEPARATOR}{expl_log}"
             print(expl_log)
 
         try:
@@ -266,12 +268,12 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
                     raise UserWarning("ICA failed to converge")
         except UserWarning as e:
             print(f'apply_ica_to_categories: converge failure - {str(e)}')
-            proc_logs[0] += f"ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
+            proc_logs[0] += f"{LOG_SEPARATOR}ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
             continue
 
         ica_results[category] = ica_components
-        ica_log = f"ICA run: measure category: {category} - Original shape: {data.shape}, Reduced shape: {ica_components.shape}, Number of iterations: {ica.n_iter_} from max iterations: 1000"
-        proc_logs[0] += f"\n{ica_log}"
+        ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged!" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
+        proc_logs[category] += f"\n{ica_log}"
         print(ica_log)
     print("-------------------" )
 

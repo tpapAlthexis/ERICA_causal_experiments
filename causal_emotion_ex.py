@@ -5,15 +5,17 @@ import os
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
+import io
+from PIL import Image
 import matplotlib.pyplot as plt
 import pandas as pd
-import sys
+import base64
 import numpy as np
 from sklearn.model_selection import GroupKFold
 
 from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import layout, column
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.io import curdoc
 from bokeh.models.widgets import Div
 
@@ -21,10 +23,11 @@ PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
 USE_ICA = True
 FOLDS = 9
-EDGE_CUTOFF = FOLDS / 2
+EDGE_CUTOFF = int(FOLDS / 2)
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 RUN_FOR_ALL_PARTICIPANTS = True
-EXPERIMENT_MEASURES = [ic.OTHER]#[ic.AUDIO, ic.EDA, ic.ECG, ic.VIDEO, ic.OTHER]
+EXPERIMENT_MEASURES = [ic.AUDIO, ic.OTHER]#[ic.AUDIO, ic.EDA, ic.ECG, ic.VIDEO, ic.OTHER]
+ALL_P_GRAPH_POSTFIX = '_all_p_graph'
 
 class ExperimentEnum(Enum):
     Setup = 0
@@ -122,7 +125,7 @@ def run_experiment_for_all_p(analysis_features):
     exp_folds = 9
     for feat in analysis_features:
         exp_dict[feat] = {}
-        #select data for the feature + arousal and valence. i.e. sound check for audio features
+        #select data for the feature + arousal and valence
         exp_data_df = ic.get_category_features(data_df, feat, True)
         graphs = ic.run_experiment(exp_data_df, folds=exp_folds, node_names=exp_data_df.columns, cv=cv_g, groups=groups)
         if graphs is None:
@@ -131,7 +134,7 @@ def run_experiment_for_all_p(analysis_features):
         exp_dict[feat][ExperimentEnum.Graphs.name] = graphs
         
         edge_histogram = ic.get_edge_histogram(exp_dict[feat][ExperimentEnum.Graphs.name], EDGE_CUTOFF)
-        ic.create_graph_image(edge_histogram, os.path.join(EXPERIMENT_FOLDER_PATH, f'{feat}_all_p_graph.png'))
+        ic.create_graph_image(edge_histogram, os.path.join(EXPERIMENT_FOLDER_PATH, f'{feat}{ALL_P_GRAPH_POSTFIX}.png'))
 
     return exp_dict
 
@@ -253,13 +256,42 @@ def create_save_histograms_all_p(res, path):
         edge_histogram = {k: v for k, v in edge_histogram.items() if v >= max_edge_count / 2}
         ic.draw_graph(edge_histogram)
 
+def create_image_div(image_path, page_width=900):
+    # Open the image with PIL
+    img = Image.open(image_path)
+
+    # Get the width and height of the image
+    original_width, original_height = img.size
+
+    # Calculate the new width that maintains the aspect ratio with a maximum height of 400
+    new_height = 300
+    new_width = int(original_width * new_height / original_height)
+
+    # If the new width is greater than the page width, recalculate the new width and height
+    if new_width > page_width:
+        new_width = page_width
+        new_height = int(original_height * new_width / original_width)
+
+    # Resize the image
+    img = img.resize((new_width, new_height))
+
+    # Convert the resized image to base64
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    image_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    # Create a Div widget with an img tag that uses the base64 string as the source
+    image_div = Div(text=f'<img src="data:image/png;base64,{image_b64}" width="{new_width}" height="{new_height}"/>')
+
+    return image_div
+
 def create_experiment_report(exp_dict, path):
     # Set the output file
     output_file(os.path.join(path, "experiment_report.html"))
 
     # Create the document title and setup information
     experiment_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    doc_title = Div(text=f"<h1>Experiment Date and Time: {experiment_datetime}</h1>")
+    doc_title = Div(text=f"<h1>Experiment Datetime: {experiment_datetime}</h1>")
     
     setup_text = "<h2>Experiment Setup:</h2>"
     for key, value in exp_dict['Setup'].items():
@@ -267,7 +299,15 @@ def create_experiment_report(exp_dict, path):
     
     experiment_setup = Div(text=setup_text)
     
-    preproc_logs_text = "<h2>Preprocessing Logs:</h2>" + "<br>".join(exp_dict['Preproc_logs'])
+    preproc_logs_text = "<h2>Preprocessing Logs:</h2>"
+    for log in exp_dict['Preproc_logs']:
+        records = log.split(ic.LOG_SEPARATOR)
+        for record in records:
+            parts = record.split(':')
+            if len(parts) == 2:
+                preproc_logs_text += f"<b>{parts[0]}:</b> {parts[1]}<br>"
+            else:
+                preproc_logs_text += f"{record}<br>"
     preproc_logs = Div(text=preproc_logs_text)
 
     # List to hold all sections for layout
@@ -282,34 +322,43 @@ def create_experiment_report(exp_dict, path):
         edge_histogram = ic.get_edge_histogram(res[feat][ExperimentEnum.Graphs.name], 0)
 
         # a) Histogram data in text
-        histogram_text = f"<h3>Histogram Data for {feat}</h3>"
+        histogram_text = f"<h2>Histogram Data for {feat}:</h2>"
         for edge, count in edge_histogram.items():
-            normalized_value = count / sum(edge_histogram.values())
-            histogram_text += f"Edge: {edge}, Count: {count}, Normalized: {normalized_value:.2f}<br>"
+            normalized_value = count / FOLDS
+            histogram_text += f"Edge: {edge}, Count: {count}, Fold Normalized: {normalized_value:.2f}<br>"
         
         histogram_div = Div(text=histogram_text)
         layout_sections.append(histogram_div)
 
         # b) Interactive histogram with Bokeh
+        edge_histogram = ic.get_edge_histogram(res[feat][ExperimentEnum.Graphs.name], EDGE_CUTOFF)
         edges = list(edge_histogram.keys())
         counts = list(edge_histogram.values())
-        source = ColumnDataSource(data=dict(edges=edges, counts=counts))
-        
-        p = figure(x_range=edges, height=250, title=f"Histogram for {feat}",
-                   toolbar_location=None, tools="")
-        p.vbar(x='edges', top='counts', width=0.9, source=source)
-        
+        source = ColumnDataSource(data=dict(edges=edges, counts=counts, half_counts=[count / 2 for count in counts]))
+
+        p = figure(x_range=edges, height=200, sizing_mode='scale_width', title=f"Histogram chart (applied cutoff):",
+                toolbar_location=None, tools="", y_axis_label='Edge count')
+        bars = p.vbar(x='edges', top='counts', width=0.9, source=source)
+
         p.y_range.start = 0
         p.xgrid.grid_line_color = None
-        p.xaxis.major_label_orientation = 1.57  # Rotate labels vertically
+        p.xaxis.major_label_text_font_size = '0pt'  # Hide x-axis labels
         p.add_tools(HoverTool(tooltips=[("Edge", "@edges"), ("Count", "@counts")]))
+
+        # Create a LabelSet and add it to the plot
+        labels = LabelSet(x='edges', y='half_counts', text='edges', level='glyph',
+                        x_offset=-13.5, y_offset=0, source=source, text_font_size='8pt', text_color='white', text_align='center', angle=3.14/2)
+        p.add_layout(labels)
 
         layout_sections.append(p)
 
-        # c) The graph image (You need to add the path to your image file)
-        graph_image_path = os.path.join(path, f'{feat}_composed.png')  # Adjust path as necessary
-        graph_image = Div(text=f'<img src="{graph_image_path}" alt="Graph Image for {feat}">', width=800)
-        layout_sections.append(graph_image)
+        # c) The graph image
+        graph_image_path = os.path.join(path, f'{feat}{ALL_P_GRAPH_POSTFIX}.png')  # Adjust path as necessary
+        image_div = create_image_div(graph_image_path, page_width=1200)
+
+        # Append the Div widget to the layout sections
+        layout_sections.append(Div(text=f"<h2>Graph Image for {feat}:</h2>"))
+        layout_sections.append(image_div)
 
     # Finalize layout and save
     l = column(layout_sections, sizing_mode='scale_width')
