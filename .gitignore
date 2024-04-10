@@ -8,6 +8,8 @@ data/experiments/*
 PC_tests/*
 Plots/*
 
+installed_packages.txt
+
 # C extensions
 *.so
 
