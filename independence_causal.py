@@ -248,15 +248,15 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
         pca_components = pca.fit_transform(data)
         num_of_components = components_threshold if pca_components.shape[1] > components_threshold else pca_components.shape[1]
 
-        pca_results[category] = pca_components
-        proc_logs[category] = f"Pre-analysis: PCA{LOG_SEPARATOR}Measure category: {category}{LOG_SEPARATOR}Original shape: {data.shape}{LOG_SEPARATOR}Explained variance: {100.00 * np.sum(pca.explained_variance_ratio_):.2f}% for {pca_components.shape[1]} components{LOG_SEPARATOR}Reduced to components number: {num_of_components}"
-        print(proc_logs[category])
+        pca_results[0] = pca_components
+        proc_logs[0] = f"Pre-analysis: PCA{LOG_SEPARATOR}Measure category: {category}{LOG_SEPARATOR}Original shape: {data.shape}{LOG_SEPARATOR}Explained variance: {100.00 * np.sum(pca.explained_variance_ratio_):.2f}% for {pca_components.shape[1]} components{LOG_SEPARATOR}Reduced to components number: {num_of_components}"
+        print(proc_logs[0])
         # Keep log of explained variance for the number of components used
         if pca_components.shape[1] > components_threshold:
             pca = PCA(n_components=components_threshold, svd_solver='full')
             pca_components = pca.fit_transform(data)
             expl_log = f"Explained variance for {pca_components.shape[1]} components: {np.sum(pca.explained_variance_ratio_):.2f}"
-            proc_logs[category] += f"{LOG_SEPARATOR}{expl_log}"
+            proc_logs[0] += f"{LOG_SEPARATOR}{expl_log}"
             print(expl_log)
 
         try:
@@ -271,9 +271,9 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
             proc_logs[0] += f"{LOG_SEPARATOR}ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
             continue
 
-        ica_results[category] = ica_components
+        ica_results[0] = ica_components
         ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged!" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
-        proc_logs[category] += f"\n{ica_log}"
+        proc_logs[0] += f"\n{ica_log}"
         print(ica_log)
     print("-------------------" )
 

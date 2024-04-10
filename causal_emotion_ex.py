@@ -26,7 +26,7 @@ FOLDS = 9
 EDGE_CUTOFF = int(FOLDS / 2)
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 RUN_FOR_ALL_PARTICIPANTS = True
-EXPERIMENT_MEASURES = [ic.AUDIO, ic.OTHER]#[ic.AUDIO, ic.EDA, ic.ECG, ic.VIDEO, ic.OTHER]
+EXPERIMENT_MEASURES = [ic.OTHER]#[ic.AUDIO, ic.EDA, ic.ECG, ic.VIDEO, ic.OTHER]
 ALL_P_GRAPH_POSTFIX = '_all_p_graph'
 
 class ExperimentEnum(Enum):
