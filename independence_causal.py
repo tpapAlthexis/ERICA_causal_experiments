@@ -271,7 +271,7 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
             proc_logs[0] += f"{LOG_SEPARATOR}ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
             continue
 
-        ica_results[0] = ica_components
+        ica_results[category] = ica_components
         ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged!" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
         proc_logs[0] += f"\n{ica_log}"
         print(ica_log)
