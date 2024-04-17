@@ -4,7 +4,7 @@ from scipy.io import arff
 import zipfile
 import sys
 import re
-from math import ceil, floor
+from multiprocessing import Pool
 
 import globals as gl
 
@@ -12,7 +12,7 @@ ARFF_TO_CSV = False
 
 LLD_frame_n_suffix = "frameIndex"
 
-LLD_COLS_TO_EXCLUDE = ["emotion", "name"]
+LLD_COLS_TO_EXCLUDE = ["emotion", "name", "frameTime"]
 Aligned_postfix = "_alligned"
 
 LLD_Modality = "ComParE"
@@ -102,7 +102,7 @@ def extract_frame_count(name):
     else:
         return -1
 
-def get_LLD_df(path):
+def align_LLD(path, save=True):
     df = None
     lld_paths = {}
     # for all folders (not the contained ones) in arg_path extract the frame count and collect the LLD paths
@@ -159,13 +159,68 @@ def get_LLD_df(path):
             #the 'frame_cnt' column will contain increasing numbering from 1 to number of frames
             mean_df[LLD_frame_n_suffix] = [i+1 for i in range(len(mean_df))]
 
+            #append to df
+            if df is None:
+                df = mean_df
+            else:
+                df = pd.concat([df, mean_df], ignore_index=True)
+
             #save as csv using the same name with the postfix '_alligned' to the same folder
-            print(f"Saving alligned LLD file to {lld_path}")
-            mean_df.to_csv(f"{lld_path}/{LLD_Modality}{Aligned_postfix}.csv", index=False)
+            if save:
+                print(f"Saving alligned LLD file to {lld_path}")
+                mean_df.to_csv(f"{lld_path}/{LLD_Modality}{Aligned_postfix}.csv", index=False)
 
         except Exception as e:
             print(f"Error in LLD file: {e}. Skipping file {lld_path}.")
+    
+    return df
 
+def getLandmarkPaths(sewa_path):
+    try:
+        landmark_paths = []
+        participant_dirs = os.listdir(sewa_path)
+        for dir_name in participant_dirs:
+            pat_path = os.path.join(sewa_path, dir_name)
+            dirs_in_path = os.listdir(pat_path)
+            land_dir_paths = [os.path.join(pat_path, d) for d in dirs_in_path if d.endswith('Landmarks') and d.startswith('extracted')]
+            for land_dir_path in land_dir_paths:
+                if os.path.isdir(land_dir_path):
+                    dirs_in_fpath = os.listdir(land_dir_path)
+                    fpath = [os.path.join(land_dir_path, d) for d in dirs_in_fpath if 'Landmarks' in d]
+                    if fpath:
+                        landmark_paths.append(fpath[0])
+        return landmark_paths
+    except Exception as e:
+        print(f"Error in getLandmarkPaths: {e}")
+
+def process_file(args):
+    land_path, txt_file = args
+    frameIndex = int(txt_file.split('.')[0])
+    with open(os.path.join(land_path, txt_file), 'r') as f:
+        lines = [list(map(float, line.strip().split())) for line in f.readlines()[:3]]
+    return [frameIndex] + lines[0] + lines[1] + lines[2], len(lines[1]), len(lines[2])
+
+def exportLandmarks(sewa_path):
+    landmark_paths = getLandmarkPaths(sewa_path)
+    if len(landmark_paths) == 0:
+        print(f"No Landmark folders found in path: {sewa_path}")
+        return None
+
+    for land_path in landmark_paths:
+        txt_files = sorted([f for f in os.listdir(land_path) if f.endswith('.txt')])
+        with Pool() as p:
+            results = p.map(process_file, [(land_path, txt_file) for txt_file in txt_files])
+        data = [result[0] for result in results]
+        eye_length = results[0][1]
+        landmark_length = results[0][2]
+        face_cols = ['pitch_deg', 'yaw_deg', 'roll_deg']
+        eye_cols = [f'eye_{coord}{i+1}' for i in range(eye_length//2) for coord in ('x', 'y')]
+        landmark_cols = [f'landmark_{coord}{i+1}' for i in range(landmark_length//2) for coord in ('x', 'y')]
+        df = pd.DataFrame(data, columns=['frameIndex'] + face_cols + eye_cols + landmark_cols)
+
+        #save the dataframe as csv to the current path
+        df.to_csv(f"{land_path}/Landmarks.csv", index=False)
+        print(f"Successfully saved Landmarks.csv to {land_path}")
 
 if __name__ == "__main__":
     try:
@@ -181,7 +236,8 @@ if __name__ == "__main__":
             check_arff_csv_pairs(arg_path)
             print("----- End of arff to csv conversion ------")
 
-        get_LLD_df(path)
+        #align_LLD(path)
+        exportLandmarks(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
             os.makedirs(gl.SEWA_PREPROCESSED_PATH)
