@@ -8,6 +8,10 @@ from multiprocessing import Pool
 
 import globals as gl
 
+TOTAL_FACIAL_LANDMARKS = 49
+TOTAL_EYE_LANDMARKS = 10
+NOSE_CENTER_INDEX = 14
+
 ARFF_TO_CSV = False
 
 LLD_frame_n_suffix = "frameIndex"
@@ -222,6 +226,53 @@ def exportLandmarks(sewa_path):
         df.to_csv(f"{land_path}/Landmarks.csv", index=False)
         print(f"Successfully saved Landmarks.csv to {land_path}")
 
+def normalizeLandmarks(sewa_path, min_max_norm=True):
+    try:
+        landmark_paths = getLandmarkPaths(sewa_path)
+        if len(landmark_paths) == 0:
+            print(f"No Landmark folders found in path: {sewa_path}")
+            return None
+
+        for land_path in landmark_paths:
+            csv_files = [f for f in os.listdir(land_path) if f.endswith('.csv') and 'Landmarks' in f]
+            if len(csv_files) == 0:
+                print(f"No Landmarks.csv file found in folder {land_path}. Skipping folder.")
+                continue
+            df = pd.read_csv(os.path.join(land_path, csv_files[0]))
+
+            # Store original nose center coordinates
+            nose_center_x = df['landmark_x' + str(NOSE_CENTER_INDEX)].copy()
+            nose_center_y = df['landmark_y' + str(NOSE_CENTER_INDEX)].copy()
+            
+            for i in range(1, TOTAL_FACIAL_LANDMARKS + 1):
+                df[f'landmark_x{i}'] -= nose_center_x
+                df[f'landmark_y{i}'] -= nose_center_y
+            
+            for i in range(1, TOTAL_EYE_LANDMARKS + 1):
+                df[f'eye_x{i}'] -= nose_center_x
+                df[f'eye_y{i}'] -= nose_center_y
+            
+            if min_max_norm:
+                # Calculate min and max values once
+                min_x = df.filter(regex='eye_x|landmark_x').min(axis=1)
+                max_x = df.filter(regex='eye_x|landmark_x').max(axis=1)
+                min_y = df.filter(regex='eye_y|landmark_y').min(axis=1)
+                max_y = df.filter(regex='eye_y|landmark_y').max(axis=1)
+                
+                # Min/Max normalization
+                for i in range(1, TOTAL_FACIAL_LANDMARKS + 1):
+                    df[f'landmark_x{i}'] = 2 * ((df[f'landmark_x{i}'] - min_x) / (max_x - min_x)) - 1
+                    df[f'landmark_y{i}'] = 2 * ((df[f'landmark_y{i}'] - min_y) / (max_y - min_y)) - 1
+                for i in range(1, TOTAL_EYE_LANDMARKS + 1):
+                    df[f'eye_x{i}'] = 2 * ((df[f'eye_x{i}'] - min_x) / (max_x - min_x)) - 1
+                    df[f'eye_y{i}'] = 2 * ((df[f'eye_y{i}'] - min_y) / (max_y - min_y)) - 1
+            
+            # Save the normalized DataFrame
+            df.to_csv(os.path.join(land_path, 'Landmarks_normalized.csv'), index=False)
+            print(f"Successfully saved Landmarks_normalized.csv to {land_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 if __name__ == "__main__":
     try:
         arg_path =  gl.SEWA_INPUT_DATA_PATH if len(sys.argv) < 2 else sys.argv[1]
@@ -237,11 +288,10 @@ if __name__ == "__main__":
             print("----- End of arff to csv conversion ------")
 
         #align_LLD(path)
-        exportLandmarks(path)
+        #exportLandmarks(path)
+        normalizeLandmarks(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
             os.makedirs(gl.SEWA_PREPROCESSED_PATH)
     except Exception as e:
         print(f"Error in main: {e}")
-
-    
