@@ -25,23 +25,9 @@ from causallearn.graph.GraphNode import GraphNode
 from causallearn.graph.Node import Node
 from causallearn.utils.GraphUtils import GraphUtils
 
-# Constants
-AUDIO = 'audio'
-VIDEO = 'video'
-ECG = 'ecg'
-EDA = 'eda'
-OTHER = 'other'
-AROUSAL = 'arousal'
-VALENCE = 'valence'
+
 
 LOG_SEPARATOR = '$'
-
-Measure_Category_Prefixes = {
-    AUDIO: 'ComParE',
-    VIDEO: 'VIDEO',
-    ECG: 'ECG',
-    EDA: 'EDA'
-}
 
 # Parameters
 PARTICIPANT = 16 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
@@ -49,7 +35,7 @@ FOLDS = 5 # number of folds
 COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lower than 95% and PCs are more, then reduct to current number
 EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
 USE_ICA = True # use ICA instead of PCA
-ANALYSIS_FEATURES = [ECG, AROUSAL, VALENCE]
+ANALYSIS_FEATURES = [gl.ECG, gl.AROUSAL, gl.VALENCE]
 
 EXPERIMENT_SETUP = f'P{PARTICIPANT}_F{FOLDS}_C{COMPONENTS_THRESHOLD}_E{EDGE_CUTOFF}_ICA{USE_ICA}'
 EXPERIMENT_ATTR = ''
@@ -86,10 +72,10 @@ def readDataAll_p(measures_list):
             data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant)))
 
             #keep only the features we are interested in
-            if not measure == OTHER:
-                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(Measure_Category_Prefixes[measure])]]
+            if not measure == gl.OTHER:
+                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
             else:
-                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if not any(prefix in col for prefix in Measure_Category_Prefixes.values())]]
+                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if not any(prefix in col for prefix in gl.Measure_Category_Prefixes.values())]]
     
             data_measure.append(data_measure_df)
         
@@ -192,18 +178,18 @@ def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=US
 
 # Function to categorize columns
 def categorize_columns(df):
-    audio_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[AUDIO])]
-    video_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[VIDEO])]
-    ecg_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[ECG])]
-    eda_features = [col for col in df.columns if col.startswith(Measure_Category_Prefixes[EDA])]
+    audio_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.AUDIO])]
+    video_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.VIDEO])]
+    ecg_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.ECG])]
+    eda_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.EDA])]
     other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
 
     return {
-        AUDIO: df[audio_features], #voice features
-        VIDEO: df[video_features], #facial features
-        ECG: df[ecg_features], #heart features, physiology
-        EDA: df[eda_features], #skin features, physiology
-        OTHER: df[other_features] #other features
+        gl.AUDIO: df[audio_features], #voice features
+        gl.VIDEO: df[video_features], #facial features
+        gl.ECG: df[ecg_features], #heart features, physiology
+        gl.EDA: df[eda_features], #skin features, physiology
+        gl.OTHER: df[other_features] #other features
     }
 
 def get_category_features(df, category, contain_annotations=False):

@@ -19,8 +19,6 @@ frame_n_suffix = "frameIndex"
 LLD_COLS_TO_EXCLUDE = ["emotion", "name", "frameTime"]
 Aligned_postfix = "_alligned"
 
-LLD_Modality = "ComParE"
-
 Annotations_postfix = "AV_Aligned"
 
 def arff_to_csv(full_path, output_path):
@@ -128,9 +126,9 @@ def align_LLD(path, save=True):
     for lld_path, total_frames in lld_paths.items():
         try:
             #check if a csv file containing LLD_Modality exists otherwise skip this folder and not '_alligned.csv' file
-            csv_files = [f for f in os.listdir(lld_path) if f.endswith('.csv') and LLD_Modality in f and Aligned_postfix not in f]
+            csv_files = [f for f in os.listdir(lld_path) if f.endswith('.csv') and gl.Measure_Category_Prefixes[gl.AUDIO] in f and Aligned_postfix not in f]
             if len(csv_files) == 0:
-                print(f"No csv file with LLD_Modality {LLD_Modality} found in folder {lld_path}. Skipping folder.")
+                print(f"No csv file with LLD_Modality {gl.Measure_Category_Prefixes[gl.AUDIO]} found in folder {lld_path}. Skipping folder.")
                 continue
 
             lld_data = pd.read_csv(os.path.join(lld_path, csv_files[0]))
@@ -174,7 +172,7 @@ def align_LLD(path, save=True):
             #save as csv using the same name with the postfix '_alligned' to the same folder
             if save:
                 print(f"Saving alligned LLD file to {lld_path}")
-                mean_df.to_csv(f"{lld_path}/{LLD_Modality}{Aligned_postfix}.csv", index=False)
+                mean_df.to_csv(f"{lld_path}/{gl.Measure_Category_Prefixes[gl.AUDIO]}{Aligned_postfix}.csv", index=False)
 
         except Exception as e:
             print(f"Error in LLD file: {e}. Skipping file {lld_path}.")
@@ -304,8 +302,15 @@ def getParticipantDF(participant_path):
         #get folder name
         folder_name = os.path.basename(participant_path)
 
-        lld_df = get_measure_data(participant_path, 'LLD', lambda f: f.endswith('.csv') and LLD_Modality in f and Aligned_postfix in f)
+        lld_df = get_measure_data(participant_path, 'LLD', lambda f: f.endswith('.csv') and gl.Measure_Category_Prefixes[gl.AUDIO] in f and Aligned_postfix in f)
         landmark_df = get_measure_data(participant_path, 'Landmarks', lambda f: f.endswith('normalized.csv'), folder_name=folder_name)
+
+        #rename landmark columns (except frameIndex) by prepending 'VIDEO_' to the column name
+        if landmark_df is not None:
+            landmark_df = landmark_df.rename(columns={col: gl.Measure_Category_Prefixes[gl.VIDEO] + '_' + col for col in landmark_df.columns if col != frame_n_suffix})
+        #rename audio columns (except frameIndex) by prepending 'ComParE' to the column name
+        if lld_df is not None:
+            lld_df = lld_df.rename(columns={col: gl.Measure_Category_Prefixes[gl.AUDIO] + '_' + col for col in lld_df.columns if col != frame_n_suffix})
 
         #check if row count is the same
         if len(lld_df) != len(landmark_df):
@@ -381,7 +386,7 @@ def export_annotations(sewa_path):
         merged_df = merged_df.rename(columns={'frame_idx': frame_n_suffix})
         #remove NaN values
         merged_df = merged_df.dropna()
-        
+
         savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + '_annotations.csv')
         merged_df.to_csv(savePath, index=False)
         print(f"Successfully saved annotations to {savePath}")
@@ -403,7 +408,7 @@ if __name__ == "__main__":
         #align_LLD(path)
         #exportLandmarks(path)
         #normalizeLandmarks(path)
-        export_preprocessed_data(path)
+        #export_preprocessed_data(path)
         export_annotations(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):

@@ -24,6 +24,22 @@ class DatasetName:
     RECOLA = 1
     SEWA = 2
 
+# Constants
+AUDIO = 'audio'
+VIDEO = 'video'
+ECG = 'ecg'
+EDA = 'eda'
+OTHER = 'other'
+AROUSAL = 'arousal'
+VALENCE = 'valence'
+
+Measure_Category_Prefixes = {
+    AUDIO: 'ComParE',
+    VIDEO: 'VIDEO',
+    ECG: 'ECG',
+    EDA: 'EDA'
+}
+
 def getParticipantStandardizedPath(participant):
     return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
 
