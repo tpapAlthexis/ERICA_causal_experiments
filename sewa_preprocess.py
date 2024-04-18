@@ -338,11 +338,6 @@ def extract_participant_number(file_path):
         # Returns None if the pattern is not found
         return None
 
-# Example usage:
-file_name = "SAH_C1_S001_P001_VC1_003857_004977_standardized.csv"
-participant_number = extract_participant_number(file_name)
-print("Participant Number:", participant_number)
-
 def time_window_for_step_size(time_window_in_secs, step_size_ms=20):
     if step_size_ms == 0:
         raise ValueError('step_size_ms cannot be 0')
@@ -471,10 +466,10 @@ if __name__ == "__main__":
             print("----- End arff to csv conversion ------")
 
         #align_LLD(path)
-        #exportLandmarks(path)
-        #normalizeLandmarks(path)
-        export_preprocessed_data(path)
-        export_annotations(path)
+        exportLandmarks(path)
+        normalizeLandmarks(path)
+        #export_preprocessed_data(path)
+        #export_annotations(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
             os.makedirs(gl.SEWA_PREPROCESSED_PATH)

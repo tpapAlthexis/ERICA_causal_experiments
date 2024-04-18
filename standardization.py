@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import sys
 import json
+import re
 from sklearn.preprocessing import StandardScaler
 
 import globals as gl
@@ -13,7 +14,7 @@ warnings.filterwarnings('ignore', message="X has feature names, but StandardScal
 
 STANDARDIZED_PARAMS_JSON_PATH = gl.STANDARDIZED_PATH + '/standardization_params.json'
 
-STANDARDIZE_ANNOTATIONS = False
+DEBUG_MODE = False
 
 DATASET_NAME = gl.DatasetName.SEWA
 
@@ -56,6 +57,10 @@ def standarize_csv(file_path, standardization_params):
     if df.empty:
         print(f"standarize_csv::File {file_path} is empty.")
         return False
+    #if df contains only one row, it is not possible to standardize
+    if len(df) == 1:
+        print(f"standarize_csv::File {file_path} contains only one row.")
+        return False
     
     try:
         scaler = StandardScaler()
@@ -68,7 +73,7 @@ def standarize_csv(file_path, standardization_params):
                     continue
                 if df[col].isnull().any():
                     print(f"Column {col} contains NaN values.")
-                    df[col].fillna(df[col].mean(), inplace=True)  # Fill NaN values with the mean
+                    return False
 
                 scaler.mean_ = standardization_params[col]['mean']
                 scaler.scale_ = standardization_params[col]['std']
@@ -78,9 +83,10 @@ def standarize_csv(file_path, standardization_params):
         savePath =  standardize_path + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
 
         #calculate new mean and std to ensure that the standardization was successful
-        for col in df.columns:
-            if col in standardization_params:
-                print(f"Measure '{col}' - New Mean: {df[col].mean():.2f}, New Std: {df[col].std():.2f}")
+        if DEBUG_MODE:
+            for col in df.columns:
+                if col in standardization_params:
+                    print(f"Measure '{col}' - New Mean: {df[col].mean():.2f}, New Std: {df[col].std():.2f}")
 
         if not os.path.exists(standardize_path):
             os.makedirs(standardize_path)
@@ -93,6 +99,10 @@ def standarize_csv(file_path, standardization_params):
     print(f"standarize_csv::File {file_path} has been standardized and saved to {savePath}.")
     return True
     
+def extract_id(filename):
+    match = re.match(r'(P\d+)_', filename)
+    return match.group(1) if match else None
+
 if __name__ == "__main__":
     preproc_path = gl.PREPROCESSED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_PREPROCESSED_PATH
     arg_path =  preproc_path if len(sys.argv) < 2 else sys.argv[1]
@@ -137,6 +147,9 @@ if __name__ == "__main__":
         
         df = pd.read_csv(path + '/' + file_name)
         standardization_params = {}
+
+        if 'P123_preprocessed' in file_name:
+            print(f"Skipping file {file_name}")
         
         for col in columns_titles:
             data = df[col].tolist()
@@ -147,7 +160,8 @@ if __name__ == "__main__":
             standardization_params[col]['mean'] = scaler.mean_[0]
             standardization_params[col]['std'] = np.sqrt(scaler.var_[0])
             
-            print(f"Measure '{col}' - Mean: {standardization_params[col]['mean']:.2f}, Std: {standardization_params[col]['std']:.2f}")
+            if DEBUG_MODE:
+                print(f"Measure '{col}' - Mean: {standardization_params[col]['mean']:.2f}, Std: {standardization_params[col]['std']:.2f}")
         
         status = standarize_csv(path + '/' + file_name, standardization_params)
         
@@ -158,29 +172,21 @@ if __name__ == "__main__":
             failed_files.append(file_name)
         print(f'---------------------------------')
 
-    if STANDARDIZE_ANNOTATIONS:
-        #standardize annotations for each participant
-        print("Standardizing annotations...")
-        participants = gl.getParticipants()
-        for participant in participants:
-            print(f"Standardizing annotations for participant {participant}...")
-            annotations_df = pd.read_csv(gl.getAnnotationsPath(participant))
-            annotations_df = annotations_df.drop(columns=['time'])
-            annotations_df = annotations_df.dropna()
-            annotations_df = annotations_df.reset_index(drop=True)
-            for col in annotations_df.columns:
-                data = annotations_df[col].tolist()
-                data = pd.DataFrame(data, columns=[col])
-                scaler.fit(data)
-                annotations_df[col] = scaler.transform(annotations_df[[col]])
-
-            annotations_df.to_csv(gl.getAnnotationsPathStd(participant), index=False)
-        
     print('\n')
     print(f'Total successful operations: {success_count}')
     print(f'Total failed operations: {failure_count}')
     print(f'Failed files: {failed_files}')
     print('---------------------------------')
+
+    print("Checking if standardization files correspond 1-1 to annotations files...")
+    standardized_files = [extract_id(f) for f in os.listdir(standardize_path) if f.endswith(gl.STANDARDIZED_POSTFIX + '.csv')]
+    annotation_files = [extract_id(f) for f in os.listdir(standardize_path) if f.endswith('annotations.csv')]
+
+    if len(standardized_files) != len(annotation_files):
+        print("Error: Standardization files do not correspond 1-1 to annotations files.")
+    else:
+        print("Standardization files correspond 1-1 to annotations files.")
+
     print("Standardization finished.")
     
     

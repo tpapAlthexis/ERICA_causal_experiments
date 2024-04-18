@@ -63,6 +63,9 @@ def readData(participant, dataset=DATASET_NAME):
     return data_df, annotations_df
 
 def readDataAll_p(measures_list, dataset=DATASET_NAME):
+    if not gl.getAnnotationStandardizationCompatibility(dataset):
+        return None, None
+
     participants = gl.getParticipants(dataset)
 
     data = {}
@@ -72,31 +75,24 @@ def readDataAll_p(measures_list, dataset=DATASET_NAME):
     for measure in measures_list:
         data_measure = []
         for participant in participants:
-            try:
-                data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
-
-                #keep only the features we are interested in
-                if not measure == gl.OTHER:
-                    data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
-                else:
-                    data_measure_df = data_measure_df[[col for col in data_measure_df.columns if not any(prefix in col for prefix in gl.Measure_Category_Prefixes.values())]]
-
-                data_measure.append(data_measure_df)
-            except:
-                continue  # Skip this participant if an error occurs
-
+            data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
+            data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
+            data_measure.append(data_measure_df)
+        
         data[measure] = pd.concat(data_measure)
 
     for participant in participants:
-        try:
-            annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
-            annotations.append(annotations_df)
-        except:
-            continue  # Skip this participant if an error occurs
+        annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
+        annotations.append(annotations_df)
 
     data_df = pd.concat(data.values(), axis=1)
     annotations_df = pd.concat(annotations)
 
+    #if data rows are not equal to annotations rows, then trigger alert and return null
+    if data_df.shape[0] != annotations_df.shape[0]:
+        print("Data and annotations rows are not equal")
+        return None, None
+           
     return data_df, annotations_df
 
 def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
@@ -126,7 +122,8 @@ def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
             continue
         
         if np.any(np.isnan(data_values)):
-            print(f"validate_categorized_data: Data for category '{category}' contains NaN values. Consider preprocessing to handle NaNs.")
+            nan_indices = np.argwhere(np.isnan(data_values))
+            print(f"validate_categorized_data: Data for category '{category}' contains NaN values at indices: {nan_indices}.")
             invalid_categories.append(category)
             continue
         

@@ -19,6 +19,8 @@ from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.io import curdoc
 from bokeh.models.widgets import Div
 
+import integrity_check
+
 PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
 USE_ICA = True
@@ -109,6 +111,10 @@ def run_causal_emotion_experiment(participant, analysis_features):
 
 def run_experiment_for_all_p(analysis_features):
     measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET_NAME)
+
+    if measure_data is None or annotation_data is None:
+        print('No data found for all participants. Aborting experiment.')
+        return None
 
     exp_dict = {}
     exp_setup = {ExperimentSetup.Participant.name: "All participants", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
@@ -367,6 +373,10 @@ def create_experiment_report(exp_dict, path):
     save(l)
 
 if __name__ == "__main__":
+
+    if integrity_check.is_ready_for_experiment(DATASET_NAME) == False:
+        print('Experiment cannot be run. Data is not ready.')
+        exit()
 
     path = create_experiment_folder_path()
 

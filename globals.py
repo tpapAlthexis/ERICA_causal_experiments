@@ -60,8 +60,26 @@ def getParticipants(dataset_name=DatasetName.RECOLA):
     if dataset_name == DatasetName.RECOLA:
         file_names = os.listdir(PREPROCESSED_PATH)
     elif dataset_name == DatasetName.SEWA:
-        file_names = os.listdir(SEWA_PREPROCESSED_PATH)
+        file_names = os.listdir(SEWA_STANDARDIZED_PATH)
     else:
         return None
     participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names]
     return list(set(participants))
+
+def getAnnotationStandardizationCompatibility(dataset_name=DatasetName.RECOLA):
+    if dataset_name == DatasetName.RECOLA:
+        file_names_ann = os.listdir(PREPROCESSED_PATH)
+        file_names_std = os.listdir(STANDARDIZED_PATH)
+    elif dataset_name == DatasetName.SEWA:
+        file_names_ann = os.listdir(SEWA_PREPROCESSED_PATH)
+        file_names_std = os.listdir(SEWA_STANDARDIZED_PATH)
+   
+    participants_ann = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names_ann if file_name.endswith('_annotations_median.csv')]
+    standardized_files = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names_std]
+    
+    print('Participants with annotations:', participants_ann)
+    print('Standardized files:', standardized_files)
+    print('Participants with annotations but no standardized files:', list(set(participants_ann) - set(standardized_files)))
+    print('Standardized files but no annotations:', list(set(standardized_files) - set(participants_ann)))
+    return set(participants_ann) == set(standardized_files)
+    
