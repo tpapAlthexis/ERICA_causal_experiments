@@ -14,7 +14,7 @@ NOSE_CENTER_INDEX = 14
 
 ARFF_TO_CSV = False
 
-LLD_frame_n_suffix = "frameIndex"
+frame_n_suffix = "frameIndex"
 
 LLD_COLS_TO_EXCLUDE = ["emotion", "name", "frameTime"]
 Aligned_postfix = "_alligned"
@@ -161,7 +161,7 @@ def align_LLD(path, save=True):
             mean_df = mean_df.iloc[::window_size, :]
 
             #the 'frame_cnt' column will contain increasing numbering from 1 to number of frames
-            mean_df[LLD_frame_n_suffix] = [i+1 for i in range(len(mean_df))]
+            mean_df[frame_n_suffix] = [i+1 for i in range(len(mean_df))]
 
             #append to df
             if df is None:
@@ -207,7 +207,7 @@ def process_file(args):
 def exportLandmarks(sewa_path):
     landmark_paths = getLandmarkPaths(sewa_path)
     if len(landmark_paths) == 0:
-        print(f"No Landmark folders found in path: {sewa_path}")
+        print(f"exportLandmarks::No Landmark folders found in path: {sewa_path}")
         return None
 
     for land_path in landmark_paths:
@@ -220,7 +220,7 @@ def exportLandmarks(sewa_path):
         face_cols = ['pitch_deg', 'yaw_deg', 'roll_deg']
         eye_cols = [f'eye_{coord}{i+1}' for i in range(eye_length//2) for coord in ('x', 'y')]
         landmark_cols = [f'landmark_{coord}{i+1}' for i in range(landmark_length//2) for coord in ('x', 'y')]
-        df = pd.DataFrame(data, columns=['frameIndex'] + face_cols + eye_cols + landmark_cols)
+        df = pd.DataFrame(data, columns=[frame_n_suffix] + face_cols + eye_cols + landmark_cols)
 
         #save the dataframe as csv to the current path
         df.to_csv(f"{land_path}/Landmarks.csv", index=False)
@@ -271,7 +271,81 @@ def normalizeLandmarks(sewa_path, min_max_norm=True):
             df.to_csv(os.path.join(land_path, 'Landmarks_normalized.csv'), index=False)
             print(f"Successfully saved Landmarks_normalized.csv to {land_path}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"normalizeLandmarks::An error occurred: {e}")
+
+def getParticipantDF(participant_path):
+    try:
+        if not os.path.exists(participant_path):
+            print(f"Path {participant_path} does not exist.")
+            return None
+
+        #get folder name
+        folder_name = os.path.basename(participant_path)
+
+        ######### GET LLD DATA #########
+        lld_path = [os.path.join(participant_path, d) for d in os.listdir(participant_path) if 'LLD' in d and 'extracted' in d]
+        if not lld_path:
+            print(f"No LLD folder found in path: {participant_path}")
+            return None
+        # get LLD .csv file
+        csv_files = [f for f in os.listdir(lld_path[0]) if f.endswith('.csv') and LLD_Modality in f and Aligned_postfix in f]
+        if not csv_files:
+            print(f"No alligned LLD .csv file found in folder {lld_path[0]}.")
+            return None
+        lld_df = pd.read_csv(os.path.join(lld_path[0], csv_files[0]))
+        if lld_df.empty:
+            print(f"LLD File {csv_files[0]} is empty or cannot be read.")
+            return None
+        ################################
+
+        ######### GET LANDMARK DATA #########
+        landmark_path = [os.path.join(participant_path, d) for d in os.listdir(participant_path) if d.endswith('Landmarks') and d.startswith('extracted')]
+        if not landmark_path:
+            print(f"No Landmarks folder found in path: {participant_path}")
+            return None
+        # get Landmarks_normalized .csv file
+        csv_files = [f for f in os.listdir(os.path.join(landmark_path[0], folder_name + "-Landmarks")) if f.endswith('normalized.csv')]
+        if not csv_files:
+            print(f"No Landmarks_normalized .csv file found in folder {landmark_path[0]}.")
+            return None
+        landmark_df = pd.read_csv(os.path.join(landmark_path[0], folder_name + "-Landmarks", csv_files[0]))
+        if landmark_df.empty:
+            print(f"Landmark File {csv_files[0]} is empty or cannot be read.")
+            return None
+        ################################
+
+        #check if row count is the same
+        if len(lld_df) != len(landmark_df):
+            print(f"Row count mismatch between LLD and Landmark dataframes. Skipping participant {folder_name}.")
+            return None
+
+        # Merge the two dataframes
+        merged_df = pd.merge(lld_df, landmark_df, on=frame_n_suffix)
+        return merged_df
+
+    except Exception as e:
+        print(f"getParticipantDF::An error occurred: {e}")
+        return None
+
+def export_preprocessed_data(sewa_path):
+    try:
+        if not os.path.exists(sewa_path):
+            print(f"export_preprocessed_data::Path {sewa_path} does not exist.")
+            return None
+        #get all participant folders
+        participant_dirs = [os.path.join(sewa_path, d) for d in os.listdir(sewa_path) if os.path.isdir(os.path.join(sewa_path, d))]
+        if len(participant_dirs) == 0:
+            print(f"No participant folders found in path: {sewa_path}")
+            return None
+        
+        for p_dir in participant_dirs:
+            df = getParticipantDF(p_dir)
+            if df is not None:
+                savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + '.csv')
+                df.to_csv(savePath, index=False)
+                print(f"Successfully saved preprocessed data to {savePath}")
+    except Exception as e:
+        print(f"Error in export_preprocessed_data: {e}")
 
 if __name__ == "__main__":
     try:
@@ -282,14 +356,15 @@ if __name__ == "__main__":
             sys.exit(1)
 
         if ARFF_TO_CSV:
-            print("----- Start of arff to csv conversion ------")
+            print("----- Start arff to csv conversion ------")
             convert_arff2csv(arg_path)
             check_arff_csv_pairs(arg_path)
-            print("----- End of arff to csv conversion ------")
+            print("----- End arff to csv conversion ------")
 
         #align_LLD(path)
         #exportLandmarks(path)
-        normalizeLandmarks(path)
+        #normalizeLandmarks(path)
+        export_preprocessed_data(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
             os.makedirs(gl.SEWA_PREPROCESSED_PATH)

@@ -13,6 +13,8 @@ warnings.filterwarnings('ignore', message="X has feature names, but StandardScal
 
 STANDARDIZED_PARAMS_JSON_PATH = gl.STANDARDIZED_PATH + '/standardization_params.json'
 
+STANDARDIZE_ANNOTATIONS = False
+
 def read_csv_file(file_path):
     try:
         df = pd.read_csv(file_path)
@@ -104,7 +106,7 @@ if __name__ == "__main__":
         sys.exit(0)
     
     columns_titles = get_column_titles(path + '/' + csv_files[0])
-    #drop time title
+    #drop time/frame title
     columns_titles = columns_titles[1:]
     
     standardization_params = {}
@@ -143,22 +145,23 @@ if __name__ == "__main__":
             failed_files.append(file_name)
         print(f'---------------------------------')
 
-    #standardize annotations for each participant
-    print("Standardizing annotations...")
-    participants = gl.getParticipants()
-    for participant in participants:
-        print(f"Standardizing annotations for participant {participant}...")
-        annotations_df = pd.read_csv(gl.getAnnotationsPath(participant))
-        annotations_df = annotations_df.drop(columns=['time'])
-        annotations_df = annotations_df.dropna()
-        annotations_df = annotations_df.reset_index(drop=True)
-        for col in annotations_df.columns:
-            data = annotations_df[col].tolist()
-            data = pd.DataFrame(data, columns=[col])
-            scaler.fit(data)
-            annotations_df[col] = scaler.transform(annotations_df[[col]])
+    if STANDARDIZE_ANNOTATIONS:
+        #standardize annotations for each participant
+        print("Standardizing annotations...")
+        participants = gl.getParticipants()
+        for participant in participants:
+            print(f"Standardizing annotations for participant {participant}...")
+            annotations_df = pd.read_csv(gl.getAnnotationsPath(participant))
+            annotations_df = annotations_df.drop(columns=['time'])
+            annotations_df = annotations_df.dropna()
+            annotations_df = annotations_df.reset_index(drop=True)
+            for col in annotations_df.columns:
+                data = annotations_df[col].tolist()
+                data = pd.DataFrame(data, columns=[col])
+                scaler.fit(data)
+                annotations_df[col] = scaler.transform(annotations_df[[col]])
 
-        annotations_df.to_csv(gl.getAnnotationsPathStd(participant), index=False)
+            annotations_df.to_csv(gl.getAnnotationsPathStd(participant), index=False)
         
     print('\n')
     print(f'Total successful operations: {success_count}')
