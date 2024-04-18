@@ -62,7 +62,7 @@ def readData(participant, dataset=DATASET_NAME):
 
     return data_df, annotations_df
 
-def readDataAll_p(measures_list):
+def readDataAll_p(measures_list, dataset=DATASET_NAME):
     participants = gl.getParticipants()
 
     data = {}
@@ -72,7 +72,7 @@ def readDataAll_p(measures_list):
     for measure in measures_list:
         data_measure = []
         for participant in participants:
-            data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant)))
+            data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
 
             #keep only the features we are interested in
             if not measure == gl.OTHER:
@@ -85,7 +85,7 @@ def readDataAll_p(measures_list):
         data[measure] = pd.concat(data_measure)
 
     for participant in participants:
-        annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant)))
+        annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
         annotations.append(annotations_df)
 
     data_df = pd.concat(data.values(), axis=1)

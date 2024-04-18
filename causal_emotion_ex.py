@@ -26,8 +26,9 @@ FOLDS = 9
 EDGE_CUTOFF = int(FOLDS / 2)
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 RUN_FOR_ALL_PARTICIPANTS = True
-EXPERIMENT_MEASURES = [ic.OTHER]#[ic.AUDIO, ic.EDA, ic.ECG, ic.VIDEO, ic.OTHER]
+EXPERIMENT_MEASURES = [gl.AUDIO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
 ALL_P_GRAPH_POSTFIX = '_all_p_graph'
+DATASET_NAME = gl.DatasetName.SEWA
 
 class ExperimentEnum(Enum):
     Setup = 0
@@ -107,7 +108,7 @@ def run_causal_emotion_experiment(participant, analysis_features):
     return exp_dict
 
 def run_experiment_for_all_p(analysis_features):
-    measure_data, annotation_data = ic.readDataAll_p(analysis_features)
+    measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET_NAME)
 
     exp_dict = {}
     exp_setup = {ExperimentSetup.Participant.name: "All participants", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
@@ -115,7 +116,7 @@ def run_experiment_for_all_p(analysis_features):
     exp_dict[ExperimentEnum.Preproc_logs.name] = ['']
 
     # groupKfold where each group is participant's data length - assuming that annotations match the measure data
-    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant)))) for participant in gl.getParticipants()]
+    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant, DATASET_NAME)))) for participant in gl.getParticipants(DATASET_NAME)]
     groups = [i for i in range(len(groups_sizes)) for _ in range(groups_sizes[i])]
 
     cv_g = GroupKFold(n_splits=FOLDS)
