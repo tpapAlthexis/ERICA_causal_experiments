@@ -15,6 +15,8 @@ STANDARDIZED_PARAMS_JSON_PATH = gl.STANDARDIZED_PATH + '/standardization_params.
 
 STANDARDIZE_ANNOTATIONS = False
 
+DATASET_NAME = gl.DatasetName.SEWA
+
 def read_csv_file(file_path):
     try:
         df = pd.read_csv(file_path)
@@ -60,19 +62,28 @@ def standarize_csv(file_path, standardization_params):
         
         for col in df.columns:
             if col in standardization_params:
+                # Check for constant or NaN values
+                if df[col].std() == 0:
+                    print(f"Column {col} has a standard deviation of zero.")
+                    continue
+                if df[col].isnull().any():
+                    print(f"Column {col} contains NaN values.")
+                    df[col].fillna(df[col].mean(), inplace=True)  # Fill NaN values with the mean
+
                 scaler.mean_ = standardization_params[col]['mean']
                 scaler.scale_ = standardization_params[col]['std']
                 df[col] = scaler.transform(df[[col]])
         
-        savePath = gl.STANDARDIZED_PATH + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
+        standardize_path = gl.STANDARDIZED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_STANDARDIZED_PATH
+        savePath =  standardize_path + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
 
         #calculate new mean and std to ensure that the standardization was successful
         for col in df.columns:
             if col in standardization_params:
                 print(f"Measure '{col}' - New Mean: {df[col].mean():.2f}, New Std: {df[col].std():.2f}")
 
-        if not os.path.exists(gl.STANDARDIZED_PATH):
-            os.makedirs(gl.STANDARDIZED_PATH)
+        if not os.path.exists(standardize_path):
+            os.makedirs(standardize_path)
         df.to_csv(savePath, index=False)
     except Exception as e:
         print(f"standarize_csv::An error occurred while standardizing the file {file_path}.")
@@ -83,15 +94,17 @@ def standarize_csv(file_path, standardization_params):
     return True
     
 if __name__ == "__main__":
-    arg_path =  gl.PREPROCESSED_PATH if len(sys.argv) < 2 else sys.argv[1]
+    preproc_path = gl.PREPROCESSED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_PREPROCESSED_PATH
+    arg_path =  preproc_path if len(sys.argv) < 2 else sys.argv[1]
     path = arg_path if os.path.exists(arg_path) else str(gl.CURRENT_DIR_PATH + '/' + arg_path)
     print(f"Standardizing files in path: {path}")
     if not os.path.exists(path):
         print(f"Path {path} does not exist.")
         sys.exit(1)
         
-    if not os.path.exists(gl.STANDARDIZED_PATH):
-        os.makedirs(gl.STANDARDIZED_PATH)
+    standardize_path = gl.STANDARDIZED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_STANDARDIZED_PATH
+    if not os.path.exists(standardize_path):
+        os.makedirs(standardize_path)
         
     #for given path get all csv files with PREPROCESSED_POSTFIX
     csv_files = [f for f in os.listdir(path) if f.endswith(gl.PREPROCESSED_POSTFIX + '.csv')]

@@ -8,7 +8,7 @@ PREPROCESSED_PATH = CURRENT_DIR_PATH + '/data/preprocessed'
 STANDARDIZED_PATH = CURRENT_DIR_PATH + '/data/standardized'
 
 SEWA_PREPROCESSED_PATH = CURRENT_DIR_PATH + '/data/preprocessed_sewa'
-SEWA_PSTANDARDIZED_PATH = CURRENT_DIR_PATH + '/data/standardized_sewa'
+SEWA_STANDARDIZED_PATH = CURRENT_DIR_PATH + '/data/standardized_sewa'
 
 PREPROCESSED_POSTFIX = '_preprocessed'
 STANDARDIZED_POSTFIX = '_standardized'
@@ -18,6 +18,11 @@ DEFAULT_INPUT_DATA_PATH = 'data/RECOLA-DATA'
 SEWA_INPUT_DATA_PATH = 'data/SEWA DB v0.2 - BASIC'
 
 EXPERIMENTAL_DATA_PATH = 'data/experiments'
+
+#enum for RECOLA or SEWA
+class DatasetName:
+    RECOLA = 1
+    SEWA = 2
 
 def getParticipantStandardizedPath(participant):
     return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'

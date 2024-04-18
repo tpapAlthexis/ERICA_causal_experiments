@@ -283,6 +283,7 @@ def get_measure_data(participant_path, data_type, file_condition, folder_name=No
     # get .csv file
     if folder_name:
         csv_files = [f for f in os.listdir(os.path.join(data_path[0], folder_name + "-" + data_type)) if file_condition(f)]
+        data_path[0] = os.path.join(data_path[0], folder_name + "-" + data_type)
     else:
         csv_files = [f for f in os.listdir(data_path[0]) if file_condition(f)]
     if not csv_files:
@@ -304,7 +305,7 @@ def getParticipantDF(participant_path):
         folder_name = os.path.basename(participant_path)
 
         lld_df = get_measure_data(participant_path, 'LLD', lambda f: f.endswith('.csv') and LLD_Modality in f and Aligned_postfix in f)
-        landmark_df = get_measure_data(participant_path, 'Landmarks', lambda f: f.endswith('normalized.csv'), folder_name)
+        landmark_df = get_measure_data(participant_path, 'Landmarks', lambda f: f.endswith('normalized.csv'), folder_name=folder_name)
 
         #check if row count is the same
         if len(lld_df) != len(landmark_df):
@@ -332,8 +333,10 @@ def export_preprocessed_data(sewa_path):
         
         for p_dir in participant_dirs:
             df = getParticipantDF(p_dir)
+            #remove NaN values
+            df = df.dropna()
             if df is not None:
-                savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + '.csv')
+                savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + gl.PREPROCESSED_POSTFIX + '.csv')
                 df.to_csv(savePath, index=False)
                 print(f"Successfully saved preprocessed data to {savePath}")
     except Exception as e:
@@ -376,6 +379,9 @@ def export_annotations(sewa_path):
         merged_df = pd.merge(arousal_df, valence_df, on='frame_idx')
         #rename frame_idx to frameIndex
         merged_df = merged_df.rename(columns={'frame_idx': frame_n_suffix})
+        #remove NaN values
+        merged_df = merged_df.dropna()
+        
         savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + '_annotations.csv')
         merged_df.to_csv(savePath, index=False)
         print(f"Successfully saved annotations to {savePath}")
@@ -397,7 +403,7 @@ if __name__ == "__main__":
         #align_LLD(path)
         #exportLandmarks(path)
         #normalizeLandmarks(path)
-        #export_preprocessed_data(path)
+        export_preprocessed_data(path)
         export_annotations(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
