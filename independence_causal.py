@@ -63,7 +63,7 @@ def readData(participant, dataset=DATASET_NAME):
     return data_df, annotations_df
 
 def readDataAll_p(measures_list, dataset=DATASET_NAME):
-    participants = gl.getParticipants()
+    participants = gl.getParticipants(dataset)
 
     data = {}
     annotations = []
@@ -72,25 +72,31 @@ def readDataAll_p(measures_list, dataset=DATASET_NAME):
     for measure in measures_list:
         data_measure = []
         for participant in participants:
-            data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
+            try:
+                data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
 
-            #keep only the features we are interested in
-            if not measure == gl.OTHER:
-                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
-            else:
-                data_measure_df = data_measure_df[[col for col in data_measure_df.columns if not any(prefix in col for prefix in gl.Measure_Category_Prefixes.values())]]
-    
-            data_measure.append(data_measure_df)
-        
+                #keep only the features we are interested in
+                if not measure == gl.OTHER:
+                    data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
+                else:
+                    data_measure_df = data_measure_df[[col for col in data_measure_df.columns if not any(prefix in col for prefix in gl.Measure_Category_Prefixes.values())]]
+
+                data_measure.append(data_measure_df)
+            except:
+                continue  # Skip this participant if an error occurs
+
         data[measure] = pd.concat(data_measure)
 
     for participant in participants:
-        annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
-        annotations.append(annotations_df)
+        try:
+            annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
+            annotations.append(annotations_df)
+        except:
+            continue  # Skip this participant if an error occurs
 
     data_df = pd.concat(data.values(), axis=1)
     annotations_df = pd.concat(annotations)
-           
+
     return data_df, annotations_df
 
 def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
