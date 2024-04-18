@@ -52,7 +52,7 @@ def getAnnotationsPath(participant, dataset_name=DatasetName.RECOLA):
     if dataset_name == DatasetName.RECOLA:
         return f'{PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
     elif dataset_name == DatasetName.SEWA:
-        return f'{SEWA_PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
+        return f'{SEWA_PREPROCESSED_PATH}/P{str(participant)}_annotations.csv'
     else:
         return None
 

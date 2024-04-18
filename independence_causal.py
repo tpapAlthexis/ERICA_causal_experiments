@@ -25,17 +25,17 @@ from causallearn.graph.GraphNode import GraphNode
 from causallearn.graph.Node import Node
 from causallearn.utils.GraphUtils import GraphUtils
 
-
-
 LOG_SEPARATOR = '$'
 
+DATASET_NAME = gl.DatasetName.SEWA
+
 # Parameters
-PARTICIPANT = 16 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
+PARTICIPANT = 1 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
 FOLDS = 5 # number of folds
 COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lower than 95% and PCs are more, then reduct to current number
 EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
 USE_ICA = True # use ICA instead of PCA
-ANALYSIS_FEATURES = [gl.ECG, gl.AROUSAL, gl.VALENCE]
+ANALYSIS_FEATURES = [gl.AUDIO, gl.AROUSAL, gl.VALENCE]
 
 EXPERIMENT_SETUP = f'P{PARTICIPANT}_F{FOLDS}_C{COMPONENTS_THRESHOLD}_E{EDGE_CUTOFF}_ICA{USE_ICA}'
 EXPERIMENT_ATTR = ''
@@ -45,17 +45,20 @@ if not os.path.exists(expertiment_path):
     os.makedirs(expertiment_path)
 
 def clear_data(data_df):
-    time_col = [col for col in data_df.columns if 'time' in col]
-    if time_col:
-        data_df = data_df.drop(columns=time_col)
-    time_col = [col for col in data_df.columns if 'Unnamed: 0' in col]
-    if time_col:
-        data_df = data_df.drop(columns=time_col)
+    drop_col = [col for col in data_df.columns if 'time' in col]
+    if drop_col:
+        data_df = data_df.drop(columns=drop_col)
+    frame_col = [col for col in data_df.columns if 'frame_range' in col]
+    if frame_col:
+        data_df = data_df.drop(columns=frame_col)
+    drop_col = [col for col in data_df.columns if 'Unnamed: 0' in col]
+    if drop_col:
+        data_df = data_df.drop(columns=drop_col)
     return data_df
 
-def readData(participant):
-    data_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant)))
-    annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant)))
+def readData(participant, dataset=DATASET_NAME):
+    data_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
+    annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
 
     return data_df, annotations_df
 
@@ -258,7 +261,7 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
             continue
 
         ica_results[category] = ica_components
-        ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged!" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
+        ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
         proc_logs[0] += f"\n{ica_log}"
         print(ica_log)
     print("-------------------" )

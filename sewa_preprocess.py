@@ -15,6 +15,7 @@ NOSE_CENTER_INDEX = 14
 ARFF_TO_CSV = False
 
 frame_n_suffix = "frameIndex"
+frame_range_suffix = "frame_range"
 
 LLD_COLS_TO_EXCLUDE = ["emotion", "name", "frameTime"]
 Aligned_postfix = "_alligned"
@@ -342,6 +343,40 @@ file_name = "SAH_C1_S001_P001_VC1_003857_004977_standardized.csv"
 participant_number = extract_participant_number(file_name)
 print("Participant Number:", participant_number)
 
+def time_window_for_step_size(time_window_in_secs, step_size_ms=20):
+    if step_size_ms == 0:
+        raise ValueError('step_size_ms cannot be 0')
+    return int(time_window_in_secs * 1000 / step_size_ms)
+
+def step_size_to_rows(step_size_ms, current_step_size_ms=20):
+    if current_step_size_ms == 0:
+        raise ValueError('step_size_ms cannot be 0')
+    return int(step_size_ms / current_step_size_ms)
+
+def subsample_df(df):
+    try:
+        win_sz = time_window_for_step_size(3) #sliding window of 3 seconds
+        step_size = step_size_to_rows(400) #step size of 400ms
+    except ValueError as e:
+        print("get_samples_csv::Error in calculating time window or step size in get_samples_csv.")
+        print(e)
+        return False
+
+    indexer = pd.api.indexers.FixedForwardWindowIndexer(window_size=win_sz)
+    print(f'subsample_df::Selected sampling window size: {win_sz} rows and step size: {step_size} rows')
+    print(f'subsample_df::Current rows: {len(df)}. Expected number of rows: {len(df) // step_size}')
+
+    df_without_suffix = df.drop(columns=[frame_n_suffix])
+    mean_df = df_without_suffix.rolling(window=indexer, min_periods=1).mean()
+    mean_df = mean_df.iloc[::step_size, :]
+
+    # Add frame_range column
+    mean_df[frame_range_suffix] = [f'{i}-{i+win_sz-1}' for i in range(1, len(df)+1, step_size)]
+    # Set frame_range col to first
+    mean_df = mean_df[[frame_range_suffix] + [col for col in mean_df.columns if col != frame_range_suffix]]
+
+    return mean_df
+
 def export_preprocessed_data(sewa_path):
     try:
         if not os.path.exists(sewa_path):
@@ -363,6 +398,8 @@ def export_preprocessed_data(sewa_path):
                 continue
             #remove NaN values
             df = df.dropna()
+            df = subsample_df(df)
+
             if df is not None:
                 savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, 'P' + str(participant_number) + gl.PREPROCESSED_POSTFIX + '.csv')
                 df.to_csv(savePath, index=False)
@@ -409,6 +446,8 @@ def export_annotations(sewa_path):
         merged_df = merged_df.rename(columns={'frame_idx': frame_n_suffix})
         #remove NaN values
         merged_df = merged_df.dropna()
+
+        merged_df = subsample_df(merged_df)
 
         dir_name = os.path.basename(p_dir)
         participant_number = extract_participant_number(dir_name)
