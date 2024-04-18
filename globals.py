@@ -40,16 +40,28 @@ Measure_Category_Prefixes = {
     EDA: 'EDA'
 }
 
-def getParticipantStandardizedPath(participant):
-    return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
+def getParticipantStandardizedPath(participant, dataset_name=DatasetName.RECOLA):
+    if dataset_name == DatasetName.RECOLA:
+        return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
+    elif dataset_name == DatasetName.SEWA:
+        return f'{SEWA_STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
+    else:
+        return None
 
-def getAnnotationsPath(participant):
-    return f'{PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
+def getAnnotationsPath(participant, dataset_name=DatasetName.RECOLA):
+    if dataset_name == DatasetName.RECOLA:
+        return f'{PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
+    elif dataset_name == DatasetName.SEWA:
+        return f'{SEWA_PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
+    else:
+        return None
 
-def getAnnotationsPathStd(participant):
-    return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}_annotations_median.csv'
-
-def getParticipants():
-    file_names = os.listdir(PREPROCESSED_PATH)
+def getParticipants(dataset_name=DatasetName.RECOLA):
+    if dataset_name == DatasetName.RECOLA:
+        file_names = os.listdir(PREPROCESSED_PATH)
+    elif dataset_name == DatasetName.SEWA:
+        file_names = os.listdir(SEWA_PREPROCESSED_PATH)
+    else:
+        return None
     participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names]
     return list(set(participants))

@@ -325,6 +325,23 @@ def getParticipantDF(participant_path):
         print(f"getParticipantDF::An error occurred: {e}")
         return None
 
+def extract_participant_number(file_path):
+    # This regular expression searches for the pattern P followed by digits
+    match = re.search(r"P(\d+)", file_path)
+    
+    if match:
+        # Extracts the participant number from the file name
+        participant_number = int(match.group(1))
+        return participant_number
+    else:
+        # Returns None if the pattern is not found
+        return None
+
+# Example usage:
+file_name = "SAH_C1_S001_P001_VC1_003857_004977_standardized.csv"
+participant_number = extract_participant_number(file_name)
+print("Participant Number:", participant_number)
+
 def export_preprocessed_data(sewa_path):
     try:
         if not os.path.exists(sewa_path):
@@ -338,10 +355,16 @@ def export_preprocessed_data(sewa_path):
         
         for p_dir in participant_dirs:
             df = getParticipantDF(p_dir)
+            #get dir name
+            dir_name = os.path.basename(p_dir)
+            participant_number = extract_participant_number(dir_name)
+            if participant_number is None:
+                print(f"Could not extract participant number from {dir_name}. Skipping participant.")
+                continue
             #remove NaN values
             df = df.dropna()
             if df is not None:
-                savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + gl.PREPROCESSED_POSTFIX + '.csv')
+                savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, 'P' + str(participant_number) + gl.PREPROCESSED_POSTFIX + '.csv')
                 df.to_csv(savePath, index=False)
                 print(f"Successfully saved preprocessed data to {savePath}")
     except Exception as e:
@@ -387,7 +410,10 @@ def export_annotations(sewa_path):
         #remove NaN values
         merged_df = merged_df.dropna()
 
-        savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + '_annotations.csv')
+        dir_name = os.path.basename(p_dir)
+        participant_number = extract_participant_number(dir_name)
+
+        savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, 'P' + str(participant_number) + '_annotations.csv')
         merged_df.to_csv(savePath, index=False)
         print(f"Successfully saved annotations to {savePath}")
 
@@ -408,7 +434,7 @@ if __name__ == "__main__":
         #align_LLD(path)
         #exportLandmarks(path)
         #normalizeLandmarks(path)
-        #export_preprocessed_data(path)
+        export_preprocessed_data(path)
         export_annotations(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
