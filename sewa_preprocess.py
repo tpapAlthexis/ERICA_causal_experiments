@@ -21,6 +21,8 @@ Aligned_postfix = "_alligned"
 
 LLD_Modality = "ComParE"
 
+Annotations_postfix = "AV_Aligned"
+
 def arff_to_csv(full_path, output_path):
     try:
         content = None
@@ -273,6 +275,25 @@ def normalizeLandmarks(sewa_path, min_max_norm=True):
     except Exception as e:
         print(f"normalizeLandmarks::An error occurred: {e}")
 
+def get_measure_data(participant_path, data_type, file_condition, folder_name=None):
+    data_path = [os.path.join(participant_path, d) for d in os.listdir(participant_path) if data_type in d and 'extracted' in d]
+    if not data_path:
+        print(f"No {data_type} folder found in path: {participant_path}")
+        return None
+    # get .csv file
+    if folder_name:
+        csv_files = [f for f in os.listdir(os.path.join(data_path[0], folder_name + "-" + data_type)) if file_condition(f)]
+    else:
+        csv_files = [f for f in os.listdir(data_path[0]) if file_condition(f)]
+    if not csv_files:
+        print(f"No {data_type} .csv file found in folder {data_path[0]}.")
+        return None
+    data_df = pd.read_csv(os.path.join(data_path[0], csv_files[0]))
+    if data_df.empty:
+        print(f"{data_type} File {csv_files[0]} is empty or cannot be read.")
+        return None
+    return data_df
+
 def getParticipantDF(participant_path):
     try:
         if not os.path.exists(participant_path):
@@ -282,37 +303,8 @@ def getParticipantDF(participant_path):
         #get folder name
         folder_name = os.path.basename(participant_path)
 
-        ######### GET LLD DATA #########
-        lld_path = [os.path.join(participant_path, d) for d in os.listdir(participant_path) if 'LLD' in d and 'extracted' in d]
-        if not lld_path:
-            print(f"No LLD folder found in path: {participant_path}")
-            return None
-        # get LLD .csv file
-        csv_files = [f for f in os.listdir(lld_path[0]) if f.endswith('.csv') and LLD_Modality in f and Aligned_postfix in f]
-        if not csv_files:
-            print(f"No alligned LLD .csv file found in folder {lld_path[0]}.")
-            return None
-        lld_df = pd.read_csv(os.path.join(lld_path[0], csv_files[0]))
-        if lld_df.empty:
-            print(f"LLD File {csv_files[0]} is empty or cannot be read.")
-            return None
-        ################################
-
-        ######### GET LANDMARK DATA #########
-        landmark_path = [os.path.join(participant_path, d) for d in os.listdir(participant_path) if d.endswith('Landmarks') and d.startswith('extracted')]
-        if not landmark_path:
-            print(f"No Landmarks folder found in path: {participant_path}")
-            return None
-        # get Landmarks_normalized .csv file
-        csv_files = [f for f in os.listdir(os.path.join(landmark_path[0], folder_name + "-Landmarks")) if f.endswith('normalized.csv')]
-        if not csv_files:
-            print(f"No Landmarks_normalized .csv file found in folder {landmark_path[0]}.")
-            return None
-        landmark_df = pd.read_csv(os.path.join(landmark_path[0], folder_name + "-Landmarks", csv_files[0]))
-        if landmark_df.empty:
-            print(f"Landmark File {csv_files[0]} is empty or cannot be read.")
-            return None
-        ################################
+        lld_df = get_measure_data(participant_path, 'LLD', lambda f: f.endswith('.csv') and LLD_Modality in f and Aligned_postfix in f)
+        landmark_df = get_measure_data(participant_path, 'Landmarks', lambda f: f.endswith('normalized.csv'), folder_name)
 
         #check if row count is the same
         if len(lld_df) != len(landmark_df):
@@ -347,6 +339,47 @@ def export_preprocessed_data(sewa_path):
     except Exception as e:
         print(f"Error in export_preprocessed_data: {e}")
 
+def get_annotation_data(p_dir, data_type):
+    data_path = [os.path.join(p_dir, d) for d in os.listdir(p_dir) if d.endswith(data_type) and d.startswith('extracted')]
+    if not data_path:
+        print(f"No {data_type} folder found in path: {p_dir}")
+        return None
+    # get .csv file
+    csv_files = [f for f in os.listdir(data_path[0]) if f.endswith(Annotations_postfix + '.csv')]
+    if not csv_files:
+        print(f"No {data_type} .csv file found in folder {data_path[0]}.")
+        return None
+    data_df = pd.read_csv(os.path.join(data_path[0], csv_files[0]))
+    if data_df.empty:
+        print(f"{data_type} File {csv_files[0]} is empty or cannot be read.")
+        return None
+    return data_df
+
+def export_annotations(sewa_path):
+    if not os.path.exists(sewa_path):
+        print(f"export_annotations::Path {sewa_path} does not exist.")
+        return None
+    #get all participant folders
+    participant_dirs = [os.path.join(sewa_path, d) for d in os.listdir(sewa_path) if os.path.isdir(os.path.join(sewa_path, d))]
+    if len(participant_dirs) == 0:
+        print(f"No participant folders found in path: {sewa_path}")
+        return None
+    
+    for p_dir in participant_dirs:
+        arousal_df = get_annotation_data(p_dir, 'Arousal')
+        if arousal_df is None:
+            continue
+        valence_df = get_annotation_data(p_dir, 'Valence')
+        if valence_df is None:
+            continue
+        # Merge the two dataframes
+        merged_df = pd.merge(arousal_df, valence_df, on='frame_idx')
+        #rename frame_idx to frameIndex
+        merged_df = merged_df.rename(columns={'frame_idx': frame_n_suffix})
+        savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, os.path.basename(p_dir) + '_annotations.csv')
+        merged_df.to_csv(savePath, index=False)
+        print(f"Successfully saved annotations to {savePath}")
+
 if __name__ == "__main__":
     try:
         arg_path =  gl.SEWA_INPUT_DATA_PATH if len(sys.argv) < 2 else sys.argv[1]
@@ -364,7 +397,8 @@ if __name__ == "__main__":
         #align_LLD(path)
         #exportLandmarks(path)
         #normalizeLandmarks(path)
-        export_preprocessed_data(path)
+        #export_preprocessed_data(path)
+        export_annotations(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
             os.makedirs(gl.SEWA_PREPROCESSED_PATH)
