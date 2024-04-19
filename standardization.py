@@ -16,7 +16,7 @@ STANDARDIZED_PARAMS_JSON_PATH = gl.STANDARDIZED_PATH + '/standardization_params.
 
 DEBUG_MODE = False
 
-DATASET_NAME = gl.DatasetName.SEWA
+DATASET_NAME = gl.Dataset.SEWA
 
 def read_csv_file(file_path):
     try:
@@ -79,7 +79,7 @@ def standarize_csv(file_path, standardization_params):
                 scaler.scale_ = standardization_params[col]['std']
                 df[col] = scaler.transform(df[[col]])
         
-        standardize_path = gl.STANDARDIZED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_STANDARDIZED_PATH
+        standardize_path = gl.STANDARDIZED_PATH if DATASET_NAME == gl.Dataset.RECOLA else gl.SEWA_STANDARDIZED_PATH
         savePath =  standardize_path + '/' + os.path.basename(file_path).replace(gl.PREPROCESSED_POSTFIX, gl.STANDARDIZED_POSTFIX)
 
         #calculate new mean and std to ensure that the standardization was successful
@@ -104,7 +104,7 @@ def extract_id(filename):
     return match.group(1) if match else None
 
 if __name__ == "__main__":
-    preproc_path = gl.PREPROCESSED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_PREPROCESSED_PATH
+    preproc_path = gl.PREPROCESSED_PATH if DATASET_NAME == gl.Dataset.RECOLA else gl.SEWA_PREPROCESSED_PATH
     arg_path =  preproc_path if len(sys.argv) < 2 else sys.argv[1]
     path = arg_path if os.path.exists(arg_path) else str(gl.CURRENT_DIR_PATH + '/' + arg_path)
     print(f"Standardizing files in path: {path}")
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         print(f"Path {path} does not exist.")
         sys.exit(1)
         
-    standardize_path = gl.STANDARDIZED_PATH if DATASET_NAME == gl.DatasetName.RECOLA else gl.SEWA_STANDARDIZED_PATH
+    standardize_path = gl.STANDARDIZED_PATH if DATASET_NAME == gl.Dataset.RECOLA else gl.SEWA_STANDARDIZED_PATH
     if not os.path.exists(standardize_path):
         os.makedirs(standardize_path)
         

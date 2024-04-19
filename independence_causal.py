@@ -27,7 +27,7 @@ from causallearn.utils.GraphUtils import GraphUtils
 
 LOG_SEPARATOR = '$'
 
-DATASET_NAME = gl.DatasetName.SEWA
+DATASET_NAME = gl.Dataset.SEWA
 
 # Parameters
 PARTICIPANT = 1 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
@@ -401,6 +401,8 @@ def create_new_graph(edge_histogram):
         complete_graph = GeneralGraph(nodes=final_nodes)
         for edge in edge_histogram:
             edge_nodes = edge.split('-->')
+            if len(edge_nodes) != 2:
+                continue
             edge_nodes = [node.strip() for node in edge_nodes]
 
             complete_graph.add_directed_edge(complete_graph.get_node(edge_nodes[0]), complete_graph.get_node(edge_nodes[1]))

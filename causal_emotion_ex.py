@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import base64
 import numpy as np
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupKFold, KFold
 
 from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import layout, column
@@ -30,7 +30,7 @@ EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_'
 RUN_FOR_ALL_PARTICIPANTS = True
 EXPERIMENT_MEASURES = [gl.AUDIO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
 ALL_P_GRAPH_POSTFIX = '_all_p_graph'
-DATASET_NAME = gl.DatasetName.RECOLA
+DATASET = gl.Dataset.SEWA
 
 class ExperimentEnum(Enum):
     Setup = 0
@@ -44,6 +44,8 @@ class ExperimentSetup(Enum):
     Components_Threshold = 3
     Edge_Cutoff = 4
     Analysis_Features = 5
+    Dataset = 6
+    Total_Observations = 7
 
 def create_comp_plot_image(graph_plots, feat, path):
     images = []
@@ -110,22 +112,22 @@ def run_causal_emotion_experiment(participant, analysis_features):
     return exp_dict
 
 def run_experiment_for_all_p(excl_participants, analysis_features):
-    measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET_NAME, excl_participants)
+    measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET, excl_participants)
 
     if measure_data is None or annotation_data is None:
         print('No data found for all participants. Aborting experiment.')
         return None
 
-    participants = gl.getParticipants(DATASET_NAME)
+    participants = gl.getParticipants(DATASET)
     eligible_participants = participants if excl_participants is None else [p for p in participants if p not in excl_participants]
 
     exp_dict = {}
-    exp_setup = {ExperimentSetup.Participant.name: f"From {len(participants)} eligible are {len(eligible_participants)}", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
+    exp_setup = {ExperimentSetup.Dataset.name: gl.DatasetNames[DATASET], ExperimentSetup.Participant.name: f"{len(eligible_participants)} eligible from {len(participants)}", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features, ExperimentSetup.Total_Observations.name: len(measure_data)}
     exp_dict[ExperimentEnum.Setup.name] = exp_setup
     exp_dict[ExperimentEnum.Preproc_logs.name] = ['']
 
     # groupKfold where each group is participant's data length - assuming that annotations match the measure data
-    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant, DATASET_NAME)))) for participant in eligible_participants]
+    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant, DATASET)))) for participant in eligible_participants]
     groups = [i for i in range(len(groups_sizes)) for _ in range(groups_sizes[i])]
 
     cv_g = GroupKFold(n_splits=FOLDS)
@@ -383,7 +385,7 @@ def create_experiment_report(exp_dict, path):
 
 if __name__ == "__main__":
 
-    is_ready, p_to_avoid = integrity_check.is_ready_for_experiment(DATASET_NAME)
+    is_ready, p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
     if not is_ready:
         print(f'Experiment will be run excluding certain participants. Total participants to avoid:{len(p_to_avoid)}') 
 

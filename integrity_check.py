@@ -7,19 +7,19 @@ P_ANN_NO_STD = 'Participants with annotations but no standardized files:'
 P_STD_NO_ANN = 'Participants with standardized files but no annotations:'
 
 def is_ready_for_experiment(dataset):
-    preproc_files = os.listdir(gl.PREPROCESSED_PATH) if dataset == gl.DatasetName.RECOLA else os.listdir(gl.SEWA_PREPROCESSED_PATH)
+    preproc_files = os.listdir(gl.PREPROCESSED_PATH) if dataset == gl.Dataset.RECOLA else os.listdir(gl.SEWA_PREPROCESSED_PATH)
     
     # get all files with annotations
-    if dataset == gl.DatasetName.RECOLA:
+    if dataset == gl.Dataset.RECOLA:
         annotation_paths = [f for f in preproc_files if f.endswith('_annotations_median.csv')]
-    elif dataset == gl.DatasetName.SEWA:
+    elif dataset == gl.Dataset.SEWA:
         annotation_paths = [f for f in preproc_files if f.endswith('annotations.csv')]
 
     #get annotation participants
     annotation_participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in annotation_paths]
 
     #get standardized participants
-    standard_path = os.listdir(gl.STANDARDIZED_PATH) if dataset == gl.DatasetName.RECOLA else os.listdir(gl.SEWA_STANDARDIZED_PATH)
+    standard_path = os.listdir(gl.STANDARDIZED_PATH) if dataset == gl.Dataset.RECOLA else os.listdir(gl.SEWA_STANDARDIZED_PATH)
     standard_p_paths = [f for f in standard_path if f.endswith(gl.STANDARDIZED_POSTFIX + '.csv')]
 
     standardized_participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in standard_p_paths]

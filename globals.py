@@ -20,9 +20,14 @@ SEWA_INPUT_DATA_PATH = 'data/SEWA DB v0.2 - BASIC'
 EXPERIMENTAL_DATA_PATH = 'data/experiments'
 
 #enum for RECOLA or SEWA
-class DatasetName:
+class Dataset:
     RECOLA = 1
     SEWA = 2
+
+DatasetNames = {
+    Dataset.RECOLA: 'RECOLA',
+    Dataset.SEWA: 'SEWA'
+}
 
 # Constants
 AUDIO = 'audio'
@@ -40,37 +45,37 @@ Measure_Category_Prefixes = {
     EDA: 'EDA'
 }
 
-def getParticipantStandardizedPath(participant, dataset_name=DatasetName.RECOLA):
-    if dataset_name == DatasetName.RECOLA:
+def getParticipantStandardizedPath(participant, dataset_name=Dataset.RECOLA):
+    if dataset_name == Dataset.RECOLA:
         return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
-    elif dataset_name == DatasetName.SEWA:
+    elif dataset_name == Dataset.SEWA:
         return f'{SEWA_STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'
     else:
         return None
 
-def getAnnotationsPath(participant, dataset_name=DatasetName.RECOLA):
-    if dataset_name == DatasetName.RECOLA:
+def getAnnotationsPath(participant, dataset_name=Dataset.RECOLA):
+    if dataset_name == Dataset.RECOLA:
         return f'{PREPROCESSED_PATH}/P{str(participant)}{PREPROCESSED_POSTFIX}_annotations_median.csv'
-    elif dataset_name == DatasetName.SEWA:
+    elif dataset_name == Dataset.SEWA:
         return f'{SEWA_PREPROCESSED_PATH}/P{str(participant)}_annotations.csv'
     else:
         return None
 
-def getParticipants(dataset_name=DatasetName.RECOLA):
-    if dataset_name == DatasetName.RECOLA:
+def getParticipants(dataset_name=Dataset.RECOLA):
+    if dataset_name == Dataset.RECOLA:
         file_names = os.listdir(PREPROCESSED_PATH)
-    elif dataset_name == DatasetName.SEWA:
+    elif dataset_name == Dataset.SEWA:
         file_names = os.listdir(SEWA_STANDARDIZED_PATH)
     else:
         return None
     participants = [int(file_name.split('P')[1].split('_')[0]) for file_name in file_names]
     return list(set(participants))
 
-def getAnnotationStandardizationCompatibility(dataset_name=DatasetName.RECOLA):
-    if dataset_name == DatasetName.RECOLA:
+def getAnnotationStandardizationCompatibility(dataset_name=Dataset.RECOLA):
+    if dataset_name == Dataset.RECOLA:
         file_names_ann = os.listdir(PREPROCESSED_PATH)
         file_names_std = os.listdir(STANDARDIZED_PATH)
-    elif dataset_name == DatasetName.SEWA:
+    elif dataset_name == Dataset.SEWA:
         file_names_ann = os.listdir(SEWA_PREPROCESSED_PATH)
         file_names_std = os.listdir(SEWA_STANDARDIZED_PATH)
    
