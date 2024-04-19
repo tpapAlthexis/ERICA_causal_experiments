@@ -30,7 +30,7 @@ EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_'
 RUN_FOR_ALL_PARTICIPANTS = True
 EXPERIMENT_MEASURES = [gl.AUDIO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
 ALL_P_GRAPH_POSTFIX = '_all_p_graph'
-DATASET_NAME = gl.DatasetName.SEWA
+DATASET_NAME = gl.DatasetName.RECOLA
 
 class ExperimentEnum(Enum):
     Setup = 0
@@ -109,20 +109,23 @@ def run_causal_emotion_experiment(participant, analysis_features):
 
     return exp_dict
 
-def run_experiment_for_all_p(analysis_features):
-    measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET_NAME)
+def run_experiment_for_all_p(excl_participants, analysis_features):
+    measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET_NAME, excl_participants)
 
     if measure_data is None or annotation_data is None:
         print('No data found for all participants. Aborting experiment.')
         return None
 
+    participants = gl.getParticipants(DATASET_NAME)
+    eligible_participants = participants if excl_participants is None else [p for p in participants if p not in excl_participants]
+
     exp_dict = {}
-    exp_setup = {ExperimentSetup.Participant.name: "All participants", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
+    exp_setup = {ExperimentSetup.Participant.name: f"From {len(participants)} eligible are {len(eligible_participants)}", ExperimentSetup.Folds.name: FOLDS, ExperimentSetup.Use_ICA.name: USE_ICA, ExperimentSetup.Components_Threshold.name: COMPONENTS_THRESHOLD, ExperimentSetup.Edge_Cutoff.name: EDGE_CUTOFF, ExperimentSetup.Analysis_Features.name: analysis_features}
     exp_dict[ExperimentEnum.Setup.name] = exp_setup
     exp_dict[ExperimentEnum.Preproc_logs.name] = ['']
 
     # groupKfold where each group is participant's data length - assuming that annotations match the measure data
-    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant, DATASET_NAME)))) for participant in gl.getParticipants(DATASET_NAME)]
+    groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant, DATASET_NAME)))) for participant in eligible_participants]
     groups = [i for i in range(len(groups_sizes)) for _ in range(groups_sizes[i])]
 
     cv_g = GroupKFold(n_splits=FOLDS)
@@ -138,6 +141,7 @@ def run_experiment_for_all_p(analysis_features):
         if graphs is None:
             print(f'No graphs detected for feature {feat}')
             continue
+
         exp_dict[feat][ExperimentEnum.Graphs.name] = graphs
         
         edge_histogram = ic.get_edge_histogram(exp_dict[feat][ExperimentEnum.Graphs.name], EDGE_CUTOFF)
@@ -325,6 +329,11 @@ def create_experiment_report(exp_dict, path):
         if feat == 'Setup' or feat == 'Preproc_logs':
             continue  # Skip non-measure data
 
+        if not feat in res:
+            continue
+
+        if not ExperimentEnum.Graphs.name in res[feat]:
+            continue
         # Process each measure data
         edge_histogram = ic.get_edge_histogram(res[feat][ExperimentEnum.Graphs.name], 0)
 
@@ -374,14 +383,14 @@ def create_experiment_report(exp_dict, path):
 
 if __name__ == "__main__":
 
-    if integrity_check.is_ready_for_experiment(DATASET_NAME) == False:
-        print('Experiment cannot be run. Data is not ready.')
-        exit()
+    is_ready, p_to_avoid = integrity_check.is_ready_for_experiment(DATASET_NAME)
+    if not is_ready:
+        print(f'Experiment will be run excluding certain participants. Total participants to avoid:{len(p_to_avoid)}') 
 
     path = create_experiment_folder_path()
 
     if RUN_FOR_ALL_PARTICIPANTS:
-        res = run_experiment_for_all_p(EXPERIMENT_MEASURES)
+        res = run_experiment_for_all_p(p_to_avoid, EXPERIMENT_MEASURES)
         # create_save_histograms_all_p(res, path)
         create_experiment_report(res, path)
         print(f'Experimental setup: {res[ExperimentEnum.Setup.name]}')

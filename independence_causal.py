@@ -62,11 +62,9 @@ def readData(participant, dataset=DATASET_NAME):
 
     return data_df, annotations_df
 
-def readDataAll_p(measures_list, dataset=DATASET_NAME):
-    if not gl.getAnnotationStandardizationCompatibility(dataset):
-        return None, None
-
+def readDataAll_p(measures_list, dataset=DATASET_NAME, exclude_participants=[]):
     participants = gl.getParticipants(dataset)
+    participants = [p for p in participants if p not in exclude_participants]
 
     data = {}
     annotations = []
@@ -316,7 +314,7 @@ def run_experiment(data_df, folds=FOLDS, node_names=None, cv=None, groups=None):
     elif isinstance(cv, GroupKFold):
         if groups is None:
             print("run_experiment: GroupKFold is specified but groups are not provided.")
-            return
+            return None
     else:
         if groups is None:
             print("run_experiment: Cv is specified but groups are not provided.")
@@ -324,6 +322,10 @@ def run_experiment(data_df, folds=FOLDS, node_names=None, cv=None, groups=None):
     fold_count = 1
     graphs = []
 
+    if len(data_df) != len(groups):
+        print("Error: data_df and groups must have the same length.")
+        return
+    
     for train_index, test_index in cv.split(data_df, groups=groups):
         train_data = data_df.iloc[train_index].values
 

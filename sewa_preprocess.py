@@ -349,6 +349,9 @@ def step_size_to_rows(step_size_ms, current_step_size_ms=20):
     return int(step_size_ms / current_step_size_ms)
 
 def subsample_df(df):
+    if df is None:
+        print("subsample_df::Dataframe is None. Skipping subsampling.")
+        return None
     try:
         win_sz = time_window_for_step_size(3) #sliding window of 3 seconds
         step_size = step_size_to_rows(400) #step size of 400ms
@@ -372,6 +375,26 @@ def subsample_df(df):
 
     return mean_df
 
+def handle_NaN(df, pn, is_annotation=False):
+    if df is None:
+        print(f"Participant {pn} contains only NaN values. Skipping participant.")
+        return None
+    #if contains NaN values > 3% of the total elements, skip the participant
+    if df.isnull().sum().sum() / df.size > 0.03:
+        print(f"Participant {pn} contains NaN values > 3% of the total elements. Skipping participant.")
+        return None
+    
+    if not is_annotation:
+        #if contains -1 values > 5% of the total rows, skip the participant
+        if (df == -1.00).sum().sum() / df.size > 0.05:
+            print(f"Participant {pn} contains -1 values > 2% of the total rows. Skipping participant.")
+            return None
+
+    #convert NaN values to 0
+    df = df.fillna(0)
+
+    return df
+
 def export_preprocessed_data(sewa_path):
     try:
         if not os.path.exists(sewa_path):
@@ -385,20 +408,29 @@ def export_preprocessed_data(sewa_path):
         
         for p_dir in participant_dirs:
             df = getParticipantDF(p_dir)
+            if df is None:
+                print(f"Could not get participant dataframe from {p_dir}. Skipping participant.")
+                continue
             #get dir name
             dir_name = os.path.basename(p_dir)
             participant_number = extract_participant_number(dir_name)
+
             if participant_number is None:
                 print(f"Could not extract participant number from {dir_name}. Skipping participant.")
                 continue
-            #remove NaN values
-            df = df.dropna()
+
+            df = handle_NaN(df, participant_number)
+
             df = subsample_df(df)
 
-            if df is not None:
-                savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, 'P' + str(participant_number) + gl.PREPROCESSED_POSTFIX + '.csv')
-                df.to_csv(savePath, index=False)
-                print(f"Successfully saved preprocessed data to {savePath}")
+            if df is None:
+                print(f"Subsampling for participant {participant_number} resulted in None. Skipping participant.")
+                continue
+
+            savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, 'P' + str(participant_number) + gl.PREPROCESSED_POSTFIX + '.csv')
+            df.to_csv(savePath, index=False)
+            print(f"Successfully saved preprocessed data to {savePath}")
+
     except Exception as e:
         print(f"Error in export_preprocessed_data: {e}")
 
@@ -429,6 +461,9 @@ def export_annotations(sewa_path):
         return None
     
     for p_dir in participant_dirs:
+        dir_name = os.path.basename(p_dir)
+        participant_number = extract_participant_number(dir_name)
+        
         arousal_df = get_annotation_data(p_dir, 'Arousal')
         if arousal_df is None:
             continue
@@ -439,13 +474,18 @@ def export_annotations(sewa_path):
         merged_df = pd.merge(arousal_df, valence_df, on='frame_idx')
         #rename frame_idx to frameIndex
         merged_df = merged_df.rename(columns={'frame_idx': frame_n_suffix})
-        #remove NaN values
-        merged_df = merged_df.dropna()
+        
+        merged_df = handle_NaN(merged_df, participant_number, is_annotation=True)
+
+        if merged_df is None:
+            print(f"Could not handle invalid values for participant {participant_number}. Skipping participant.")
+            continue
 
         merged_df = subsample_df(merged_df)
 
-        dir_name = os.path.basename(p_dir)
-        participant_number = extract_participant_number(dir_name)
+        if merged_df is None:
+            print(f"Subsampling for participant {participant_number} resulted in None. Skipping participant.")
+            continue
 
         savePath = os.path.join(gl.SEWA_PREPROCESSED_PATH, 'P' + str(participant_number) + '_annotations.csv')
         merged_df.to_csv(savePath, index=False)
@@ -466,10 +506,10 @@ if __name__ == "__main__":
             print("----- End arff to csv conversion ------")
 
         #align_LLD(path)
-        exportLandmarks(path)
-        normalizeLandmarks(path)
+        # exportLandmarks(path)
+        # normalizeLandmarks(path)
         #export_preprocessed_data(path)
-        #export_annotations(path)
+        export_annotations(path)
                 
         if not os.path.exists(gl.SEWA_PREPROCESSED_PATH):
             os.makedirs(gl.SEWA_PREPROCESSED_PATH)
