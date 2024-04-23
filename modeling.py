@@ -1,8 +1,11 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
+from sklearn.model_selection import cross_val_score
 
 import integrity_check
 import data_acquisition as da
@@ -40,7 +43,10 @@ if __name__ == "__main__":
     participants = [p for p in participants if p not in p_to_avoid]
 
     # Split the participants into training and test sets (20% of participants will be used for testing)
-    train_participants, test_participants = train_test_split(participants, test_size=0.2, random_state=42)
+    train_participants, test_participants = train_test_split(participants, test_size=0.2, shuffle=True)
+
+    print(f"Training participants: {train_participants}")
+    print(f"Test participants: {test_participants}")
 
     train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False)
     if train_features is None or train_targets is None:
@@ -58,18 +64,17 @@ if __name__ == "__main__":
         print("Data and annotations rows are not equal")
         exit()
 
-    ##### MODELING AROUSAL #####
     train_valence = train_targets.filter(like=gl.VALENCE, axis=1)
     test_valence = test_targets.filter(like=gl.VALENCE, axis=1)
 
-    model_valence = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_valence = SVR()
     model_valence.fit(train_features, np.ravel(train_valence))
 
     # Predicting the test set results
     y_pred_valence = model_valence.predict(test_features)
-    print('Arousal Model MSE:', mean_squared_error(test_valence, y_pred_valence))
-    print('Arousal Model R^2:', r2_score(test_valence, y_pred_valence))
-    
+    print('Valence Model Test MSE:', mean_squared_error(test_valence, y_pred_valence))
+    print('Valence Model Test R^2:', r2_score(test_valence, y_pred_valence))
+        
 
     
 

@@ -15,6 +15,7 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import GroupKFold
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FastICA
+from sklearn.model_selection import BaseCrossValidator
 
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.utils.cit import fisherz
@@ -45,6 +46,15 @@ EXPERIMENT_ATTR = ''
 expertiment_path = gl.EXPERIMENTAL_DATA_PATH + f'/independence/_P{PARTICIPANT}'
 if not os.path.exists(expertiment_path):
     os.makedirs(expertiment_path)
+
+#just to hack the cross validation
+class NoSplitCV(BaseCrossValidator):
+    def get_n_splits(self, X=None, y=None, groups=None):
+        return 1  # Mimic having splits but prevent actual split
+
+    def split(self, X, y=None, groups=None):
+        indices = range(len(X))
+        yield indices, indices
 
 def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=[''], analysis_features=None):
     categorized_data = da.categorize_columns(data_df)
@@ -334,7 +344,27 @@ def draw_graph(edge_histogram):
 
     plt.show()
 
+def test_experiment():
+    file_path = gl.TEST_PATH + '/data_linear_10.txt'
+    if not os.path.exists(file_path):
+        print(f"test_experiment: File {file_path} does not exist.")
+        return
+    
+    data_df = pd.read_csv(file_path, sep='\t')
+    data_df = data_df.dropna()
+
+    node_names = data_df.columns
+
+    graphs = run_experiment(data_df, cv=NoSplitCV(), node_names=node_names)
+    edge_histogram = get_edge_histogram(graphs, edge_cutoff=0)
+    
+    draw_graph(edge_histogram)
+    
+
 if __name__ == "__main__":
+
+    test_experiment()
+    sys.exit(0)
 
     # Categorize the columns of your dataframe
     categorized_data, annotation_data = da.readData(PARTICIPANT, DATASET_NAME)
