@@ -68,4 +68,4 @@ def is_ready_for_experiment(dataset):
     if p_to_avoid:
         print(f"Participants to avoid: {sorted(list(p_to_avoid))}")
     
-    return state, list([] if not p_to_avoid else p_to_avoid)
+    return list([] if not p_to_avoid else p_to_avoid)

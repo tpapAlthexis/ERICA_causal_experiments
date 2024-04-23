@@ -20,6 +20,7 @@ from bokeh.io import curdoc
 from bokeh.models.widgets import Div
 
 import integrity_check
+import data_acquisition as da
 
 PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
@@ -112,7 +113,7 @@ def run_causal_emotion_experiment(participant, analysis_features):
     return exp_dict
 
 def run_experiment_for_all_p(excl_participants, analysis_features):
-    measure_data, annotation_data = ic.readDataAll_p(analysis_features, DATASET, excl_participants)
+    measure_data, annotation_data = da.readDataAll_p(analysis_features, DATASET, excl_participants)
 
     if measure_data is None or annotation_data is None:
         print('No data found for all participants. Aborting experiment.')
@@ -385,8 +386,8 @@ def create_experiment_report(exp_dict, path):
 
 if __name__ == "__main__":
 
-    is_ready, p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
-    if not is_ready:
+    p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
+    if p_to_avoid:
         print(f'Experiment will be run excluding certain participants. Total participants to avoid:{len(p_to_avoid)}') 
 
     path = create_experiment_folder_path()

@@ -25,12 +25,14 @@ from causallearn.graph.GraphNode import GraphNode
 from causallearn.graph.Node import Node
 from causallearn.utils.GraphUtils import GraphUtils
 
+import data_acquisition as da
+
 LOG_SEPARATOR = '$'
 
-DATASET_NAME = gl.Dataset.SEWA
+DATASET_NAME = gl.Dataset.RECOLA
 
 # Parameters
-PARTICIPANT = 1 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
+PARTICIPANT = 16 # participant number, ex participants: 16, 19, 21, 23, 25, 26, 28  
 FOLDS = 5 # number of folds
 COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lower than 95% and PCs are more, then reduct to current number
 EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
@@ -43,101 +45,6 @@ EXPERIMENT_ATTR = ''
 expertiment_path = gl.EXPERIMENTAL_DATA_PATH + f'/independence/_P{PARTICIPANT}'
 if not os.path.exists(expertiment_path):
     os.makedirs(expertiment_path)
-
-def clear_data(data_df):
-    drop_col = [col for col in data_df.columns if 'time' in col]
-    if drop_col:
-        data_df = data_df.drop(columns=drop_col)
-    frame_col = [col for col in data_df.columns if 'frame_range' in col]
-    if frame_col:
-        data_df = data_df.drop(columns=frame_col)
-    drop_col = [col for col in data_df.columns if 'Unnamed: 0' in col]
-    if drop_col:
-        data_df = data_df.drop(columns=drop_col)
-    return data_df
-
-def readData(participant, dataset=DATASET_NAME):
-    data_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
-    annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
-
-    return data_df, annotations_df
-
-def readDataAll_p(measures_list, dataset=DATASET_NAME, exclude_participants=[]):
-    participants = gl.getParticipants(dataset)
-    participants = [p for p in participants if p not in exclude_participants]
-
-    data = {}
-    annotations = []
-
-    #read data and annotations for each measure and for all participants
-    for measure in measures_list:
-        data_measure = []
-        for participant in participants:
-            data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
-            data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
-            data_measure.append(data_measure_df)
-        
-        data[measure] = pd.concat(data_measure)
-
-    for participant in participants:
-        annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
-        annotations.append(annotations_df)
-
-    data_df = pd.concat(data.values(), axis=1)
-    annotations_df = pd.concat(annotations)
-
-    #if data rows are not equal to annotations rows, then trigger alert and return null
-    if data_df.shape[0] != annotations_df.shape[0]:
-        print("Data and annotations rows are not equal")
-        return None, None
-           
-    return data_df, annotations_df
-
-def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
-    """
-    Validates the categorized data for PCA/ICA analysis.
-    
-    Parameters:
-    - categorized_data: dict, with categories as keys and pandas DataFrame/2D numpy array as values.
-    - min_samples: int, minimum number of samples required to proceed with the analysis.
-    - min_features: int, minimum number of features required to proceed with the analysis.
-    
-    Returns:
-    - valid_data: dict, containing only the categories with valid data for analysis.
-    - invalid_categories: list, categories that did not meet the validation criteria.
-    """
-    valid_data = {}
-    invalid_categories = []
-    
-    for category, data in categorized_data.items():
-        if isinstance(data, pd.DataFrame):
-            data_values = data.values
-        elif isinstance(data, np.ndarray):
-            data_values = data
-        else:
-            print(f"validate_categorized_data: Invalid data type for category '{category}'. Expecting pandas DataFrame or numpy array.")
-            invalid_categories.append(category)
-            continue
-        
-        if np.any(np.isnan(data_values)):
-            nan_indices = np.argwhere(np.isnan(data_values))
-            print(f"validate_categorized_data: Data for category '{category}' contains NaN values at indices: {nan_indices}.")
-            invalid_categories.append(category)
-            continue
-        
-        if data_values.shape[0] < min_samples:
-            print(f"validate_categorized_data: Category '{category}' does not have enough samples ({data_values.shape[0]}). Minimum required is {min_samples}.")
-            invalid_categories.append(category)
-            continue
-        
-        if data_values.shape[1] < min_features:
-            print(f"validate_categorized_data: Category '{category}' does not have enough features ({data_values.shape[1]}). Minimum required is {min_features}.")
-            invalid_categories.append(category)
-            continue
-
-        valid_data[category] = data
-    
-    return valid_data, invalid_categories
 
 def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=[''], analysis_features=None):
     categorized_data = categorize_columns(data_df)
@@ -227,7 +134,7 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
 def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
     pca_results = {}
     ica_results = {}
-    valid_data, invalid_categories = validate_categorized_data(categorized_data)
+    valid_data, invalid_categories = da.validate_categorized_data(categorized_data)
     if invalid_categories:
         print("Some categories were invalid and will be skipped:", invalid_categories)
 
@@ -322,7 +229,7 @@ def run_experiment(data_df, folds=FOLDS, node_names=None, cv=None, groups=None):
     fold_count = 1
     graphs = []
 
-    if len(data_df) != len(groups):
+    if groups and len(data_df) != len(groups):
         print("Error: data_df and groups must have the same length.")
         return
     
@@ -452,7 +359,7 @@ def draw_graph(edge_histogram):
 if __name__ == "__main__":
 
     # Categorize the columns of your dataframe
-    categorized_data, annotation_data = readData(PARTICIPANT)
+    categorized_data, annotation_data = da.readData(PARTICIPANT, DATASET_NAME)
 
     # Apply preprocessing to the data (PCA, flattening, etc.)
     data_df = preprocess_data(categorized_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA)
