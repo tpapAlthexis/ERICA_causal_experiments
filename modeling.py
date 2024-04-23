@@ -59,16 +59,16 @@ if __name__ == "__main__":
         exit()
 
     ##### MODELING AROUSAL #####
-    train_arousal = train_targets.filter(like=gl.AROUSAL, axis=1)
-    test_arousal = test_targets.filter(like=gl.AROUSAL, axis=1)
+    train_valence = train_targets.filter(like=gl.VALENCE, axis=1)
+    test_valence = test_targets.filter(like=gl.VALENCE, axis=1)
 
-    model_arousal = RandomForestRegressor(n_estimators=100, random_state=42)
-    model_arousal.fit(train_features, np.ravel(train_arousal))
+    model_valence = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_valence.fit(train_features, np.ravel(train_valence))
 
     # Predicting the test set results
-    y_pred_arousal = model_arousal.predict(test_features)
-    print('Arousal Model MSE:', mean_squared_error(test_arousal, y_pred_arousal))
-    print('Arousal Model R^2:', r2_score(test_arousal, y_pred_arousal))
+    y_pred_valence = model_valence.predict(test_features)
+    print('Arousal Model MSE:', mean_squared_error(test_valence, y_pred_valence))
+    print('Arousal Model R^2:', r2_score(test_valence, y_pred_valence))
     
 
     
