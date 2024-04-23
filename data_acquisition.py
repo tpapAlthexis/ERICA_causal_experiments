@@ -23,6 +23,7 @@ def readData(participant, dataset):
 def readDataAll_p(measures_list, dataset, exclude_participants=[]):
     participants = gl.getParticipants(dataset)
     participants = [p for p in participants if p not in exclude_participants]
+    participants.sort()
 
     data = {}
     annotations = []
@@ -84,6 +85,22 @@ def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
         valid_data[category] = data
     
     return valid_data, invalid_categories
+
+# Function to categorize columns
+def categorize_columns(df):
+    audio_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.AUDIO])]
+    video_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.VIDEO])]
+    ecg_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.ECG])]
+    eda_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.EDA])]
+    other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
+
+    return {
+        gl.AUDIO: df[audio_features], #voice features
+        gl.VIDEO: df[video_features], #facial features
+        gl.ECG: df[ecg_features], #heart features, physiology
+        gl.EDA: df[eda_features], #skin features, physiology
+        gl.OTHER: df[other_features] #other features
+    }
 
 # Function to categorize columns
 def categorize_columns(df):

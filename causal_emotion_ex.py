@@ -29,9 +29,9 @@ FOLDS = 9
 EDGE_CUTOFF = int(FOLDS / 2)
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 RUN_FOR_ALL_PARTICIPANTS = True
-EXPERIMENT_MEASURES = [gl.AUDIO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
+EXPERIMENT_MEASURES = [gl.AUDIO, gl.VIDEO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
 ALL_P_GRAPH_POSTFIX = '_all_p_graph'
-DATASET = gl.Dataset.SEWA
+DATASET = gl.Dataset.RECOLA
 
 class ExperimentEnum(Enum):
     Setup = 0
@@ -139,7 +139,7 @@ def run_experiment_for_all_p(excl_participants, analysis_features):
     for feat in analysis_features:
         exp_dict[feat] = {}
         #select data for the feature + arousal and valence
-        exp_data_df = ic.get_category_features(data_df, feat, True)
+        exp_data_df = da.get_category_features(data_df, feat, True)
         graphs = ic.run_experiment(exp_data_df, folds=exp_folds, node_names=exp_data_df.columns, cv=cv_g, groups=groups)
         if graphs is None:
             print(f'No graphs detected for feature {feat}')
@@ -153,7 +153,7 @@ def run_experiment_for_all_p(excl_participants, analysis_features):
     return exp_dict
 
 def run_experiment(features = EXPERIMENT_MEASURES):
-    const_features = [ic.AROUSAL, ic.VALENCE] 
+    const_features = [gl.AROUSAL, gl.VALENCE] 
 
     experiment_res_dict = {}
     path = create_experiment_folder_path()

@@ -47,7 +47,7 @@ if not os.path.exists(expertiment_path):
     os.makedirs(expertiment_path)
 
 def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=USE_ICA, proc_logs=[''], analysis_features=None):
-    categorized_data = categorize_columns(data_df)
+    categorized_data = da.categorize_columns(data_df)
     #keep only the features we are interested in
     if analysis_features:
         categorized_data = {key: value for key, value in categorized_data.items() if key in analysis_features}
@@ -86,28 +86,6 @@ def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=US
     component_data.update(flattened_data)
 
     return pd.DataFrame(component_data)
-
-# Function to categorize columns
-def categorize_columns(df):
-    audio_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.AUDIO])]
-    video_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.VIDEO])]
-    ecg_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.ECG])]
-    eda_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.EDA])]
-    other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
-
-    return {
-        gl.AUDIO: df[audio_features], #voice features
-        gl.VIDEO: df[video_features], #facial features
-        gl.ECG: df[ecg_features], #heart features, physiology
-        gl.EDA: df[eda_features], #skin features, physiology
-        gl.OTHER: df[other_features] #other features
-    }
-
-def get_category_features(df, category, contain_annotations=False):
-    if not contain_annotations:
-        return df[[col for col in df.columns if category in col]].copy()
-    else:
-        return df[[col for col in df.columns if (category in col) or ('arousal'in col or 'valence' in col)]].copy()
 
 # Function to apply PCA to each category and retain components explaining 95% variance
 def apply_pca_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
