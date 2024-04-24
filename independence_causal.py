@@ -225,12 +225,18 @@ def run_experiment(data_df, folds=FOLDS, node_names=None, cv=None, groups=None):
         train_data = data_df.iloc[train_index].values
 
         # print indices of the columns that are used in the train data
-        print(f'Fold {fold_count} - Train data columns: {train_index}. Test data columns: {test_index}')
-        print(f'Fold {fold_count} - Train data shape: {train_data.shape}. Test data shape: {data_df.iloc[test_index].values.shape}')
+        #print(f'Fold {fold_count} - Train data columns: {train_index}. Test data columns: {test_index}')
+        #print(f'Fold {fold_count} - Train data shape: {train_data.shape}. Test data shape: {data_df.iloc[test_index].values.shape}')
 
         try:
             # Run PC algorithm on train data
-            cg_train = pc(data=train_data, alpha=0.05, indep_test=fisherz, node_names=node_names)
+            cg_train = pc(data=train_data,
+                          alpha=0.005, #Significance level
+                          indep_test=fisherz,
+                          stable=True,
+                          node_names=node_names,
+                          uc_role=2, # 0: uc_sepset, 1: maxP, 2: definateMaxP
+                          uc_priority=-1) # -1: uc_role's priority, 0: overwrite, 1: orient bidirected edges, 2: ex colliders, 3: stronger colliders, 4: stronger colliders
             
             gs = cg_train.G.__str__()
             print(f'Graph string:{gs}')
@@ -362,9 +368,6 @@ def test_experiment():
     
 
 if __name__ == "__main__":
-
-    test_experiment()
-    sys.exit(0)
 
     # Categorize the columns of your dataframe
     categorized_data, annotation_data = da.readData(PARTICIPANT, DATASET_NAME)

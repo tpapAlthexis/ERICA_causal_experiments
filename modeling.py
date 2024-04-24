@@ -43,7 +43,7 @@ if __name__ == "__main__":
     participants = [p for p in participants if p not in p_to_avoid]
 
     # Split the participants into training and test sets (20% of participants will be used for testing)
-    train_participants, test_participants = train_test_split(participants, test_size=0.2, shuffle=True)
+    train_participants, test_participants = train_test_split(participants, test_size=0.2, shuffle=False)
 
     print(f"Training participants: {train_participants}")
     print(f"Test participants: {test_participants}")
@@ -64,8 +64,8 @@ if __name__ == "__main__":
         print("Data and annotations rows are not equal")
         exit()
 
-    train_valence = train_targets.filter(like=gl.VALENCE, axis=1)
-    test_valence = test_targets.filter(like=gl.VALENCE, axis=1)
+    train_valence = train_targets.filter(like=gl.AROUSAL, axis=1)
+    test_valence = test_targets.filter(like=gl.AROUSAL, axis=1)
 
     model_valence = SVR()
     model_valence.fit(train_features, np.ravel(train_valence))
