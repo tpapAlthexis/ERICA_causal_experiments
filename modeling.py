@@ -81,12 +81,30 @@ def get_comp_to_response(graph):
 def get_selected_features(edges, train_features):
     train_features_gr = None
     for edge in edges:
-            if train_features_gr is None:
-                train_features_gr = train_features[edge.get_node1().get_name()]
-            else:
-                train_features_gr = pd.concat([train_features_gr, train_features[edge.get_node1().get_name()]], axis=1)
+        print(f'Edge: {edge.get_node1().get_name()} -> {edge.get_node2().get_name()}')
+        if train_features_gr is None:
+            train_features_gr = train_features[edge.get_node1().get_name()]
+        else:
+            train_features_gr = pd.concat([train_features_gr, train_features[edge.get_node1().get_name()]], axis=1)
 
     return train_features_gr
+
+def train_model(model, features, targets):
+    model.fit(features, targets)
+    return model
+
+def predict_model(model, features):
+    return model.predict(features)
+
+def calculate_kendall_tau(test_targets, predictions):
+    kendall_tau, _ = stats.kendalltau(test_targets, predictions)
+    return kendall_tau
+
+def print_results(fold, arousal_reg_kendall, valence_reg_kendall, arousal_causal_kendall, valence_causal_kendall):
+    print(f'Fold {fold} results:')
+    print(f'- Reg Arousal Kendall:{arousal_reg_kendall}, Reg Valence Kendall:{valence_reg_kendall}')
+    print(f'- Causal Arousal Kendall:{arousal_causal_kendall}, Causal Valence Kendall:{valence_causal_kendall}')
+    print('-------------------------------------------------')
 
 if __name__ == "__main__":
     p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
@@ -95,12 +113,6 @@ if __name__ == "__main__":
 
     participants = gl.getParticipants(DATASET)
     participants = [p for p in participants if p not in p_to_avoid]
-
-    # Initialize the SVR models
-    regArousalModel = SVR()
-    regValenceModel = SVR()
-    causalRegArousal = SVR()
-    causalRegValence = SVR()
 
     # Initialize the k-Fold cross-validator
     kf = KFold(n_splits=FOLDS, shuffle=True, random_state=1)
@@ -114,27 +126,35 @@ if __name__ == "__main__":
 
     # Perform k-fold cross-validation
     for train_index, test_index in kf.split(participants):
+        print("Fold number:", fold_cnt)
+        # Initialize the SVR models
+        regArousalModel = SVR()
+        regValenceModel = SVR()
+        causalRegArousal = SVR()
+        causalRegValence = SVR()
+
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
         train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True)
         test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True)
+        print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
+        print("Reading data...")
         arousal_train_targets = train_targets['median_' + gl.AROUSAL]
         valence_train_targets = train_targets['median_' + gl.VALENCE]
 
         arousal_test_targets = test_targets['median_' + gl.AROUSAL]
         valence_test_targets = test_targets['median_' + gl.VALENCE]
 
-        # Train a regression model
-        regArousalModel.fit(train_features, arousal_train_targets)
-        regValenceModel.fit(train_features, valence_train_targets)
+        print("Training regression model...")
+        regArousalModel = train_model(regArousalModel, train_features, arousal_train_targets)
+        regValenceModel = train_model(regValenceModel, train_features, valence_train_targets)
 
-        # Explore causal graph
-        
         # concut train features and targets to a numpy array
         train_data = pd.concat([train_features.reset_index(drop=True), train_targets.reset_index(drop=True)], axis=1)
 
+        print("Exploring causal graph...")
         cg_train = pc(data=np.array(train_data),
                           alpha=0.005, #Significance level
                           indep_test=fisherz,
@@ -146,46 +166,49 @@ if __name__ == "__main__":
         gs = cg_train.G.__str__()
         print(f'Graph string:{gs}')
 
+        print("Getting response edges...")
         resp_edges = get_comp_to_response(cg_train)
         #drop edge from resp_edges where node1 is arousal or valence
         resp_edges = [edge for edge in resp_edges if edge.get_node1().get_name().split('_')[1] not in [gl.AROUSAL, gl.VALENCE]]
         
-        arousal_edges = [edge for edge in resp_edges if edge.get_node1().get_name().split('_')[1] == gl.AROUSAL]
-        valence_edges = [edge for edge in resp_edges if edge.get_node1().get_name().split('_')[1] == gl.VALENCE]
+        arousal_edges = [edge for edge in resp_edges if edge.get_node2().get_name().split('_')[1] == gl.AROUSAL]
+        valence_edges = [edge for edge in resp_edges if edge.get_node2().get_name().split('_')[1] == gl.VALENCE]
 
         #drop train features that are not in arousal_edges & valence_edges
         train_features_gr_arousal = get_selected_features(arousal_edges, train_features)
         train_features_gr_valence = get_selected_features(valence_edges, train_features)
 
-        # Train the regression models
-        causalRegArousal.fit(train_features_gr_arousal, arousal_train_targets)
-        causalRegValence.fit(train_features_gr_valence, valence_train_targets)
+        if train_features_gr_arousal is None or train_features_gr_valence is None:
+            print(f'No features selected for arousal or valence in fold {fold_cnt}. Skipping fold...')
+            continue
 
+        print("Training the causal regression models...")
+        causalRegArousal = train_model(causalRegArousal, train_features_gr_arousal, arousal_train_targets)
+        causalRegValence = train_model(causalRegValence, train_features_gr_valence, valence_train_targets)
+
+        print("Evaluating the models...")
+        reg_arousal_predictions = predict_model(regArousalModel, test_features)
+        reg_valence_predictions = predict_model(regValenceModel, test_features)
+
+        causal_test_features_arousal = get_selected_features(arousal_edges, test_features)
+        causal_test_features_valence = get_selected_features(valence_edges, test_features)
+
+        causal_arousal_predictions = predict_model(causalRegArousal, causal_test_features_arousal)
+        causal_valence_predictions = predict_model(causalRegValence, causal_test_features_valence)
+
+        print("Calculating Kendall tau correlation...")
+        arousal_reg_kendall = calculate_kendall_tau(arousal_test_targets, reg_arousal_predictions)
+        valence_reg_kendall = calculate_kendall_tau(valence_test_targets, reg_valence_predictions)
+
+        arousal_causal_kendall = calculate_kendall_tau(arousal_test_targets, causal_arousal_predictions)
+        valence_causal_kendall = calculate_kendall_tau(valence_test_targets, causal_valence_predictions)
+
+        print_results(fold_cnt, arousal_reg_kendall, valence_reg_kendall, arousal_causal_kendall, valence_causal_kendall)
         fold_cnt += 1
-
-        #evaluate the models
-        reg_arousal_predictions = regArousalModel.predict(test_features)
-        reg_valence_predictions = regValenceModel.predict(test_features)
-
-        causal_arousal_predictions = causalRegArousal.predict(test_features)
-        causal_valence_predictions = causalRegValence.predict(test_features)
-
-        #calculate kendall tau correlation
-        arousal_reg_kendall, _ = stats.kendalltau(arousal_test_targets, reg_arousal_predictions)
-        valence_reg_kendall, _ = stats.kendalltau(valence_test_targets, reg_valence_predictions)
-
-        arousal_causal_kendall, _ = stats.kendalltau(arousal_test_targets, causal_arousal_predictions)
-        valence_causal_kendall, _ = stats.kendalltau(valence_test_targets, causal_valence_predictions)
-
-        print(f'Fold {fold_cnt} results:')
-        print(f'- Reg Arousal Kendall:{arousal_reg_kendall}, Reg Valence Kendall:{valence_reg_kendall}')
-        print(f'- Causal Arousal Kendall:{arousal_causal_kendall}, Causal Valence Kendall:{valence_causal_kendall}')
-        print('-------------------------------------------------')
 
         modeling_results[fold_cnt] = {'reg_arousal_kendall': arousal_reg_kendall, 'reg_valence_kendall': valence_reg_kendall,
                                       'causal_arousal_kendall': arousal_causal_kendall, 'causal_valence_kendall': valence_causal_kendall}
 
-        
     # print result summary for all folds
     print('Modeling results summary:')
     for fold, results in modeling_results.items():
