@@ -26,9 +26,47 @@ DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
 FOLDS = 9
 
+Selected_audio_features = [
+    "ComParE13_LLD_25Hz_F0final_sma_amean",
+    "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_amean",
+    "ComParE13_LLD_25Hz_jitterLocal_sma_amean",
+    "ComParE13_LLD_25Hz_shimmerLocal_sma_amean",
+    "ComParE13_LLD_25Hz_logHNR_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_zcr_sma_amean",
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[0]_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_amean",
+    "ComParE13_LLD_25Hz_mfcc_sma[1]_amean",
+    "ComParE13_LLD_25Hz_mfcc_sma[2]_amean",
+    "audio_speech_probability_lstm_vad"
+]
+
+Selected_video_features = [
+    "VIDEO_40_LLD_AU1",
+    "VIDEO_40_LLD_AU4",
+    "VIDEO_40_LLD_AU6",
+    "VIDEO_40_LLD_AU12",
+    "VIDEO_40_LLD_AU15",
+    "VIDEO_40_LLD_AU20",
+    "VIDEO_40_LLD_AU25",
+    "VIDEO_40_LLD_Yaw",
+    "VIDEO_40_LLD_Pitch",
+    "VIDEO_40_LLD_Roll",
+    "VIDEO_40_LLD_Opt_mean",
+    "VIDEO_40_LLD_AU12_delta",
+    "VIDEO_40_LLD_AU4_delta",
+    "VIDEO_40_LLD_AU6_delta",
+    "Face_detection_probability"
+]
+
 def read_data(p_to_avoid=[], apply_ica=False):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
+        selected_features = Selected_audio_features + Selected_video_features
+        data = data[selected_features]  # Filter columns based on selected features
         return data, annotations
 
     categorized_data = da.categorize_columns(data)
@@ -117,10 +155,6 @@ if __name__ == "__main__":
     # Initialize the k-Fold cross-validator
     kf = KFold(n_splits=FOLDS, shuffle=True, random_state=1)
 
-    # Define the scoring metrics
-    scoring = {'mse': make_scorer(mean_squared_error, greater_is_better=False), 
-               'r2': make_scorer(r2_score)}
-
     fold_cnt = 1
     modeling_results = dict()
 
@@ -136,8 +170,8 @@ if __name__ == "__main__":
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True)
-        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True)
+        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False)
+        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=False)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         print("Reading data...")

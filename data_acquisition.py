@@ -3,16 +3,8 @@ import globals as gl
 import numpy as np
 
 def clear_data(data_df):
-    drop_col = [col for col in data_df.columns if 'time' in col]
-    if drop_col:
-        data_df = data_df.drop(columns=drop_col)
-    frame_col = [col for col in data_df.columns if 'frame_range' in col]
-    if frame_col:
-        data_df = data_df.drop(columns=frame_col)
-    drop_col = [col for col in data_df.columns if 'Unnamed: 0' in col]
-    if drop_col:
-        data_df = data_df.drop(columns=drop_col)
-    return data_df
+    drop_col = [col for col in data_df.columns if 'time' in col or 'frame_range' in col or 'Unnamed: 0' in col]
+    return data_df.drop(columns=drop_col, errors='ignore')
 
 def readData(participant, dataset):
     data_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
@@ -33,7 +25,9 @@ def readDataAll_p(measures_list, dataset, exclude_participants=[]):
         data_measure = []
         for participant in participants:
             data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
-            data_measure_df = data_measure_df[[col for col in data_measure_df.columns if col.startswith(gl.Measure_Category_Prefixes[measure])]]
+            prefixes = gl.Measure_Category_Prefixes.get(measure, [])
+            cols = [col for col in data_measure_df.columns if any(col.startswith(prefix) for prefix in prefixes)]
+            data_measure_df = data_measure_df[cols]
             data_measure.append(data_measure_df)
         
         data[measure] = pd.concat(data_measure)
@@ -88,35 +82,21 @@ def validate_categorized_data(categorized_data, min_samples=10, min_features=2):
 
 # Function to categorize columns
 def categorize_columns(df):
-    audio_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.AUDIO])]
-    video_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.VIDEO])]
-    ecg_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.ECG])]
-    eda_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.EDA])]
-    other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
+    # Categorizes columns based on predefined categories and returns separate dataframes for each.
+    categorized = {}
+    other_features = set(df.columns)
+    for category, prefixes in gl.Measure_Category_Prefixes.items():
+        if isinstance(prefixes, list):
+            prefixes = tuple(prefixes)  # Convert list to tuple for startswith
+        elif isinstance(prefixes, str):
+            prefixes = (prefixes,)  # Convert single string to tuple
 
-    return {
-        gl.AUDIO: df[audio_features], #voice features
-        gl.VIDEO: df[video_features], #facial features
-        gl.ECG: df[ecg_features], #heart features, physiology
-        gl.EDA: df[eda_features], #skin features, physiology
-        gl.OTHER: df[other_features] #other features
-    }
+        category_features = [col for col in df.columns if col.startswith(prefixes)]
+        categorized[category] = df[category_features]
+        other_features -= set(category_features)
 
-# Function to categorize columns
-def categorize_columns(df):
-    audio_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.AUDIO])]
-    video_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.VIDEO])]
-    ecg_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.ECG])]
-    eda_features = [col for col in df.columns if col.startswith(gl.Measure_Category_Prefixes[gl.EDA])]
-    other_features = [col for col in df.columns if col not in audio_features + video_features + ecg_features + eda_features]
-
-    return {
-        gl.AUDIO: df[audio_features], #voice features
-        gl.VIDEO: df[video_features], #facial features
-        gl.ECG: df[ecg_features], #heart features, physiology
-        gl.EDA: df[eda_features], #skin features, physiology
-        gl.OTHER: df[other_features] #other features
-    }
+    categorized['OTHER'] = df[list(other_features)]  # Data that doesn't fit any category
+    return categorized
 
 def get_category_features(df, category, contain_annotations=False):
     if not contain_annotations:

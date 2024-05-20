@@ -41,10 +41,10 @@ AROUSAL = 'arousal'
 VALENCE = 'valence'
 
 Measure_Category_Prefixes = {
-    AUDIO: 'ComParE',
-    VIDEO: 'VIDEO',
-    ECG: 'ECG',
-    EDA: 'EDA'
+    AUDIO: ['ComParE', 'audio_'],
+    VIDEO: ['VIDEO', 'Face_'],
+    ECG: ['ECG'],
+    EDA: ['EDA']
 }
 
 def getParticipantStandardizedPath(participant, dataset_name=Dataset.RECOLA):
