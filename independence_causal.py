@@ -39,6 +39,7 @@ COMPONENTS_THRESHOLD = 15 # number of PCA compontents. If expl. variance is lowe
 EDGE_CUTOFF = FOLDS / 2 # number of edges to be included in the histogram. If edge count is less than this number, then remove it
 USE_ICA = True # use ICA instead of PCA
 ANALYSIS_FEATURES = [gl.AUDIO, gl.AROUSAL, gl.VALENCE]
+MEASURE_LIST = [gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
 
 EXPERIMENT_SETUP = f'P{PARTICIPANT}_F{FOLDS}_C{COMPONENTS_THRESHOLD}_E{EDGE_CUTOFF}_ICA{USE_ICA}'
 EXPERIMENT_ATTR = ''
@@ -258,22 +259,35 @@ def get_edge_histogram(graphs, edge_cutoff=5):
     fold_num = 0
     edge_histogram = {}
     for graph in graphs:
-        set_edges = set()
         graph_general = graph.G
+        graph_edges = graph_general.get_graph_edges()
 
-        graph_nodes = graph_general.get_node_names()
-        for node1 in graph_nodes:
-            for node2 in graph_nodes:
-                if node1 != node2:
-                    edge = graph_general.get_edge(graph_general.get_node(node1), graph_general.get_node(node2))
-                    if '>' in edge.__str__():
-                        set_edges.add(edge.__str__())
+        for edge in graph_edges:
+            
+            point1 = edge.get_endpoint1()
+            point2 = edge.get_endpoint2()
 
-        for edge in set_edges:
-            if edge in edge_histogram:
-                edge_histogram[edge] += 1
+            # if it contains a bidirectional edge, skip it
+            if point1 == Endpoint.ARROW and point2 == Endpoint.ARROW:
+                print(f'Skipping bidirectional edge: {edge.get_node1().get_name()} <--> {edge.get_node2().get_name()}')
+                continue
+            if point1 != Endpoint.ARROW and point2 != Endpoint.ARROW:
+                print(f'Skipping non-directed edge: {edge.get_node1().get_name()} -- {edge.get_node2().get_name()}')
+                continue
+
+            if edge.pointing_left(point1, point2):
+                node = edge.get_node1()
             else:
-                edge_histogram[edge] = 1
+                node = edge.get_node2()
+
+            if not node:
+                continue
+
+            edge_str = edge.__str__()
+            if edge_str in edge_histogram:
+                edge_histogram[edge_str] += 1
+            else:
+                edge_histogram[edge_str] = 1
 
         fold_num += 1
 
@@ -287,11 +301,17 @@ def get_edge_histogram(graphs, edge_cutoff=5):
 
 def get_nodes_from_histogram(edge_histogram):
     nodes = set()
-    for edge in edge_histogram:
-        edge_nodes = edge.split('-->')
-        edge_nodes = [node.strip() for node in edge_nodes]
-        nodes.add(edge_nodes[0])
-        nodes.add(edge_nodes[1])
+    try:
+        for edge in edge_histogram:
+            edge_nodes = edge.split('-->')
+            if len(edge_nodes) != 2:
+                continue
+            edge_nodes = [node.strip() for node in edge_nodes]
+            nodes.add(edge_nodes[0])
+            nodes.add(edge_nodes[1])
+    except Exception as e:
+        print(f"An error occurred in get_nodes_from_histogram: {str(e)}")
+        return None
 
     return [GraphNode(node) for node in nodes]
 
@@ -333,6 +353,11 @@ def create_graph_image(edge_histogram, save_path):
         # Save png to path
         with open(save_path, 'wb') as f:
             f.write(tmp_png)
+
+        # Check if file was created
+        if not os.path.isfile(save_path):
+            print(f"create_graph_image::Failed to create the file at: {save_path}")
+            return False
 
     except Exception as e:
         print(f"create_graph_image::An error occurred: {str(e)}")

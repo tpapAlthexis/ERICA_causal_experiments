@@ -26,10 +26,10 @@ PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
 USE_ICA = True
 FOLDS = 9
-EDGE_CUTOFF = int(FOLDS / 2)
+EDGE_CUTOFF = 0#int(FOLDS / 2)
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 RUN_FOR_ALL_PARTICIPANTS = True
-EXPERIMENT_MEASURES = [gl.AUDIO, gl.VIDEO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
+EXPERIMENT_MEASURES = [gl.AUDIO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
 ALL_P_GRAPH_POSTFIX = '_all_p_graph'
 DATASET = gl.Dataset.RECOLA
 
@@ -112,7 +112,7 @@ def run_causal_emotion_experiment(participant, analysis_features):
 
     return exp_dict
 
-def run_experiment_for_all_p(excl_participants, analysis_features):
+def run_experiment_for_all_p(excl_participants, analysis_features, run_dim_reduction=True):
     measure_data, annotation_data = da.readDataAll_p(analysis_features, DATASET, excl_participants)
 
     if measure_data is None or annotation_data is None:
@@ -133,8 +133,15 @@ def run_experiment_for_all_p(excl_participants, analysis_features):
 
     cv_g = GroupKFold(n_splits=FOLDS)
 
-    # Apply preprocessing to the data (categorization, ICA, flattening, etc.)
-    data_df = ic.preprocess_data(measure_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA, exp_dict[ExperimentEnum.Preproc_logs.name], analysis_features)
+    if run_dim_reduction:
+        # Apply preprocessing to the data (categorization, ICA, flattening, etc.)
+        data_df = ic.preprocess_data(measure_data, annotation_data, COMPONENTS_THRESHOLD, USE_ICA, exp_dict[ExperimentEnum.Preproc_logs.name], analysis_features)
+    else:
+        selected_features = gl.Selected_audio_features + gl.Selected_video_features
+        measure_data = measure_data[selected_features]  # Filter columns based on selected features
+        #concut measurements and annotations
+        data_df = pd.concat([measure_data, annotation_data], axis=1)
+
     exp_folds = 9
     for feat in analysis_features:
         exp_dict[feat] = {}
@@ -393,7 +400,7 @@ if __name__ == "__main__":
     path = create_experiment_folder_path()
 
     if RUN_FOR_ALL_PARTICIPANTS:
-        res = run_experiment_for_all_p(p_to_avoid, EXPERIMENT_MEASURES)
+        res = run_experiment_for_all_p(p_to_avoid, EXPERIMENT_MEASURES, True)
         # create_save_histograms_all_p(res, path)
         create_experiment_report(res, path)
         print(f'Experimental setup: {res[ExperimentEnum.Setup.name]}')

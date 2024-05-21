@@ -47,6 +47,42 @@ Measure_Category_Prefixes = {
     EDA: ['EDA']
 }
 
+Selected_audio_features = [
+    "ComParE13_LLD_25Hz_F0final_sma_amean",
+    "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_amean",
+    "ComParE13_LLD_25Hz_jitterLocal_sma_amean",
+    "ComParE13_LLD_25Hz_shimmerLocal_sma_amean",
+    "ComParE13_LLD_25Hz_logHNR_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_zcr_sma_amean",
+    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[0]_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_amean",
+    "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_amean",
+    "ComParE13_LLD_25Hz_mfcc_sma[1]_amean",
+    "ComParE13_LLD_25Hz_mfcc_sma[2]_amean",
+    "audio_speech_probability_lstm_vad"
+]
+
+Selected_video_features = [
+    "VIDEO_40_LLD_AU1",
+    "VIDEO_40_LLD_AU4",
+    "VIDEO_40_LLD_AU6",
+    "VIDEO_40_LLD_AU12",
+    "VIDEO_40_LLD_AU15",
+    "VIDEO_40_LLD_AU20",
+    "VIDEO_40_LLD_AU25",
+    "VIDEO_40_LLD_Yaw",
+    "VIDEO_40_LLD_Pitch",
+    "VIDEO_40_LLD_Roll",
+    "VIDEO_40_LLD_Opt_mean",
+    "VIDEO_40_LLD_AU12_delta",
+    "VIDEO_40_LLD_AU4_delta",
+    "VIDEO_40_LLD_AU6_delta",
+    "Face_detection_probability"
+]
+
 def getParticipantStandardizedPath(participant, dataset_name=Dataset.RECOLA):
     if dataset_name == Dataset.RECOLA:
         return f'{STANDARDIZED_PATH}/P{str(participant)}{STANDARDIZED_POSTFIX}.csv'

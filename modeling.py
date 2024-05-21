@@ -1,8 +1,6 @@
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 from sklearn.metrics import make_scorer
 from scipy import stats
@@ -24,48 +22,12 @@ from sklearn.model_selection import KFold
 
 DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
-FOLDS = 9
-
-Selected_audio_features = [
-    "ComParE13_LLD_25Hz_F0final_sma_amean",
-    "ComParE13_LLD_25Hz_voicingFinalUnclipped_sma_amean",
-    "ComParE13_LLD_25Hz_jitterLocal_sma_amean",
-    "ComParE13_LLD_25Hz_shimmerLocal_sma_amean",
-    "ComParE13_LLD_25Hz_logHNR_sma_amean",
-    "ComParE13_LLD_25Hz_pcm_RMSenergy_sma_amean",
-    "ComParE13_LLD_25Hz_pcm_zcr_sma_amean",
-    "ComParE13_LLD_25Hz_audSpec_Rfilt_sma[0]_amean",
-    "ComParE13_LLD_25Hz_pcm_Mag_spectralFlux_sma_amean",
-    "ComParE13_LLD_25Hz_pcm_Mag_spectralEntropy_sma_amean",
-    "ComParE13_LLD_25Hz_pcm_Mag_spectralCentroid_sma_amean",
-    "ComParE13_LLD_25Hz_pcm_Mag_psySharpness_sma_amean",
-    "ComParE13_LLD_25Hz_mfcc_sma[1]_amean",
-    "ComParE13_LLD_25Hz_mfcc_sma[2]_amean",
-    "audio_speech_probability_lstm_vad"
-]
-
-Selected_video_features = [
-    "VIDEO_40_LLD_AU1",
-    "VIDEO_40_LLD_AU4",
-    "VIDEO_40_LLD_AU6",
-    "VIDEO_40_LLD_AU12",
-    "VIDEO_40_LLD_AU15",
-    "VIDEO_40_LLD_AU20",
-    "VIDEO_40_LLD_AU25",
-    "VIDEO_40_LLD_Yaw",
-    "VIDEO_40_LLD_Pitch",
-    "VIDEO_40_LLD_Roll",
-    "VIDEO_40_LLD_Opt_mean",
-    "VIDEO_40_LLD_AU12_delta",
-    "VIDEO_40_LLD_AU4_delta",
-    "VIDEO_40_LLD_AU6_delta",
-    "Face_detection_probability"
-]
+FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
 
 def read_data(p_to_avoid=[], apply_ica=False):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
-        selected_features = Selected_audio_features + Selected_video_features
+        selected_features = gl.Selected_audio_features + gl.Selected_video_features
         data = data[selected_features]  # Filter columns based on selected features
         return data, annotations
 
@@ -119,7 +81,7 @@ def get_comp_to_response(graph):
 def get_selected_features(edges, train_features):
     train_features_gr = None
     for edge in edges:
-        print(f'Edge: {edge.get_node1().get_name()} -> {edge.get_node2().get_name()}')
+        print(f'Edge: {edge.get_node1().get_name()} --> {edge.get_node2().get_name()}')
         if train_features_gr is None:
             train_features_gr = train_features[edge.get_node1().get_name()]
         else:
@@ -138,11 +100,29 @@ def calculate_kendall_tau(test_targets, predictions):
     kendall_tau, _ = stats.kendalltau(test_targets, predictions)
     return kendall_tau
 
-def print_results(fold, arousal_reg_kendall, valence_reg_kendall, arousal_causal_kendall, valence_causal_kendall):
+def calculate_pcc(test_targets, predictions):
+    pcc, _ = stats.pearsonr(test_targets, predictions)
+    return pcc
+
+def print_results(fold, *args):
     print(f'Fold {fold} results:')
-    print(f'- Reg Arousal Kendall:{arousal_reg_kendall}, Reg Valence Kendall:{valence_reg_kendall}')
-    print(f'- Causal Arousal Kendall:{arousal_causal_kendall}, Causal Valence Kendall:{valence_causal_kendall}')
+    for arg in args:
+        print(f'- {arg}')
     print('-------------------------------------------------')
+
+def get_baseline_models(p_to_avoid):
+    regArousalModel = LinearRegression()
+    regValenceModel = LinearRegression()
+
+    train_features, train_targets = read_data(p_to_avoid=p_to_avoid, apply_ica=False)
+
+    arousal_train_targets = train_targets['median_' + gl.AROUSAL]
+    valence_train_targets = train_targets['median_' + gl.VALENCE]
+
+    regArousalModel = train_model(regArousalModel, train_features, arousal_train_targets)
+    regValenceModel = train_model(regValenceModel, train_features, valence_train_targets)
+
+    return regArousalModel, regValenceModel
 
 if __name__ == "__main__":
     p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
@@ -158,20 +138,25 @@ if __name__ == "__main__":
     fold_cnt = 1
     modeling_results = dict()
 
+    regArousalModels = [None] * FOLDS
+    regValenceModels = [None] * FOLDS
+    causalRegArousalModels = [None] * FOLDS
+    causalRegValenceModels = [None] * FOLDS
+
     # Perform k-fold cross-validation
     for train_index, test_index in kf.split(participants):
         print("Fold number:", fold_cnt)
         # Initialize the SVR models
-        regArousalModel = SVR()
-        regValenceModel = SVR()
-        causalRegArousal = SVR()
-        causalRegValence = SVR()
+        regArousalModel = LinearRegression()
+        regValenceModel = LinearRegression()
+        causalRegArousal = LinearRegression()
+        causalRegValence = LinearRegression()
 
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False)
-        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=False)
+        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True)
+        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         print("Reading data...")
@@ -182,8 +167,8 @@ if __name__ == "__main__":
         valence_test_targets = test_targets['median_' + gl.VALENCE]
 
         print("Training regression model...")
-        regArousalModel = train_model(regArousalModel, train_features, arousal_train_targets)
-        regValenceModel = train_model(regValenceModel, train_features, valence_train_targets)
+        regArousalModels[fold_cnt] = train_model(regArousalModel, train_features, arousal_train_targets)
+        regValenceModels[fold_cnt] = train_model(regValenceModel, train_features, valence_train_targets)
 
         # concut train features and targets to a numpy array
         train_data = pd.concat([train_features.reset_index(drop=True), train_targets.reset_index(drop=True)], axis=1)
@@ -217,10 +202,10 @@ if __name__ == "__main__":
             continue
 
         print("Training the causal regression models...")
-        causalRegArousal = train_model(causalRegArousal, train_features_gr_arousal, arousal_train_targets)
-        causalRegValence = train_model(causalRegValence, train_features_gr_valence, valence_train_targets)
+        causalRegArousalModels[fold_cnt] = train_model(causalRegArousal, train_features_gr_arousal, arousal_train_targets)
+        causalRegValenceModels[fold_cnt] = train_model(causalRegValence, train_features_gr_valence, valence_train_targets)
 
-        print("Evaluating the models...")
+        print("Evaluating the models for participant:", test_participants)
         reg_arousal_predictions = predict_model(regArousalModel, test_features)
         reg_valence_predictions = predict_model(regValenceModel, test_features)
 
@@ -237,11 +222,31 @@ if __name__ == "__main__":
         arousal_causal_kendall = calculate_kendall_tau(arousal_test_targets, causal_arousal_predictions)
         valence_causal_kendall = calculate_kendall_tau(valence_test_targets, causal_valence_predictions)
 
-        print_results(fold_cnt, arousal_reg_kendall, valence_reg_kendall, arousal_causal_kendall, valence_causal_kendall)
+        arousal_reg_pcc = calculate_pcc(arousal_test_targets, reg_arousal_predictions)
+        valence_reg_pcc = calculate_pcc(valence_test_targets, reg_valence_predictions)
+
+        arousal_causal_pcc = calculate_pcc(arousal_test_targets, causal_arousal_predictions)
+        valence_causal_pcc = calculate_pcc(valence_test_targets, causal_valence_predictions)
+
+        print_results(
+            fold_cnt, 
+            f'Reg Arousal Kendall: {arousal_reg_kendall}', 
+            f'Reg Valence Kendall: {valence_reg_kendall}', 
+            f'Causal Arousal Kendall: {arousal_causal_kendall}', 
+            f'Causal Valence Kendall: {valence_causal_kendall}',
+            f'Reg Arousal PCC: {arousal_reg_pcc}', 
+            f'Reg Valence PCC: {valence_reg_pcc}', 
+            f'Causal Arousal PCC: {arousal_causal_pcc}', 
+            f'Causal Valence PCC: {valence_causal_pcc}',
+            f'Baseline Arousal Kendall: {calculate_kendall_tau(arousal_test_targets, baseline_arousal_predictions)}',
+            f'Baseline Valence Kendall: {calculate_kendall_tau(valence_test_targets, baseline_valence_predictions)}',
+        )
         fold_cnt += 1
 
         modeling_results[fold_cnt] = {'reg_arousal_kendall': arousal_reg_kendall, 'reg_valence_kendall': valence_reg_kendall,
-                                      'causal_arousal_kendall': arousal_causal_kendall, 'causal_valence_kendall': valence_causal_kendall}
+                                      'causal_arousal_kendall': arousal_causal_kendall, 'causal_valence_kendall': valence_causal_kendall,
+                                      'reg_arousal_pcc': arousal_reg_pcc, 'reg_valence_pcc': valence_reg_pcc,
+                                      'causal_arousal_pcc': arousal_causal_pcc, 'causal_valence_pcc': valence_causal_pcc}
 
     # print result summary for all folds
     print('Modeling results summary:')
@@ -253,10 +258,16 @@ if __name__ == "__main__":
     valence_reg_kendall = np.mean([results['reg_valence_kendall'] for results in modeling_results.values()])
     arousal_causal_kendall = np.mean([results['causal_arousal_kendall'] for results in modeling_results.values()])
     valence_causal_kendall = np.mean([results['causal_valence_kendall'] for results in modeling_results.values()])
+    arousal_reg_pcc = np.mean([results['reg_arousal_pcc'] for results in modeling_results.values()])
+    valence_reg_pcc = np.mean([results['reg_valence_pcc'] for results in modeling_results.values()])
+    arousal_causal_pcc = np.mean([results['causal_arousal_pcc'] for results in modeling_results.values()])
+    valence_causal_pcc = np.mean([results['causal_valence_pcc'] for results in modeling_results.values()])
 
     print('Mean values:')
     print(f'Reg Arousal Kendall:{arousal_reg_kendall}, Reg Valence Kendall:{valence_reg_kendall}')
     print(f'Causal Arousal Kendall:{arousal_causal_kendall}, Causal Valence Kendall:{valence_causal_kendall}')
+    print(f'Reg Arousal PCC:{arousal_reg_pcc}, Reg Valence PCC:{valence_reg_pcc}')
+    print(f'Causal Arousal PCC:{arousal_causal_pcc}, Causal Valence PCC:{valence_causal_pcc}')
        
         
 
