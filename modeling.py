@@ -24,7 +24,7 @@ DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
 FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
 
-def read_data(p_to_avoid=[], apply_ica=False):   
+def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
         selected_features = gl.Selected_audio_features + gl.Selected_video_features
@@ -35,7 +35,7 @@ def read_data(p_to_avoid=[], apply_ica=False):
     #keep only the features we are interested in
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
-    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, 15)
+    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, 15, ICA_models=ica_models)
     flattened_data = pd.DataFrame()
     for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
@@ -110,20 +110,6 @@ def print_results(fold, *args):
         print(f'- {arg}')
     print('-------------------------------------------------')
 
-def get_baseline_models(p_to_avoid):
-    regArousalModel = LinearRegression()
-    regValenceModel = LinearRegression()
-
-    train_features, train_targets = read_data(p_to_avoid=p_to_avoid, apply_ica=False)
-
-    arousal_train_targets = train_targets['median_' + gl.AROUSAL]
-    valence_train_targets = train_targets['median_' + gl.VALENCE]
-
-    regArousalModel = train_model(regArousalModel, train_features, arousal_train_targets)
-    regValenceModel = train_model(regValenceModel, train_features, valence_train_targets)
-
-    return regArousalModel, regValenceModel
-
 if __name__ == "__main__":
     p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
     if p_to_avoid:
@@ -138,11 +124,6 @@ if __name__ == "__main__":
     fold_cnt = 1
     modeling_results = dict()
 
-    regArousalModels = [None] * FOLDS
-    regValenceModels = [None] * FOLDS
-    causalRegArousalModels = [None] * FOLDS
-    causalRegValenceModels = [None] * FOLDS
-
     # Perform k-fold cross-validation
     for train_index, test_index in kf.split(participants):
         print("Fold number:", fold_cnt)
@@ -155,8 +136,11 @@ if __name__ == "__main__":
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True)
-        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True)
+        ica_models = {}
+        print("Reading training data...")
+        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, ica_models=ica_models)
+        print("Reading testing data...")
+        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, ica_models=ica_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         print("Reading data...")
@@ -167,8 +151,8 @@ if __name__ == "__main__":
         valence_test_targets = test_targets['median_' + gl.VALENCE]
 
         print("Training regression model...")
-        regArousalModels[fold_cnt] = train_model(regArousalModel, train_features, arousal_train_targets)
-        regValenceModels[fold_cnt] = train_model(regValenceModel, train_features, valence_train_targets)
+        regArousalModel = train_model(regArousalModel, train_features, arousal_train_targets)
+        regValenceModel = train_model(regValenceModel, train_features, valence_train_targets)
 
         # concut train features and targets to a numpy array
         train_data = pd.concat([train_features.reset_index(drop=True), train_targets.reset_index(drop=True)], axis=1)
@@ -202,8 +186,8 @@ if __name__ == "__main__":
             continue
 
         print("Training the causal regression models...")
-        causalRegArousalModels[fold_cnt] = train_model(causalRegArousal, train_features_gr_arousal, arousal_train_targets)
-        causalRegValenceModels[fold_cnt] = train_model(causalRegValence, train_features_gr_valence, valence_train_targets)
+        causalRegArousal = train_model(causalRegArousal, train_features_gr_arousal, arousal_train_targets)
+        causalRegValence = train_model(causalRegValence, train_features_gr_valence, valence_train_targets)
 
         print("Evaluating the models for participant:", test_participants)
         reg_arousal_predictions = predict_model(regArousalModel, test_features)

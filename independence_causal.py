@@ -120,7 +120,7 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
     print("-------------------" )
     return pca_results
 
-def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=['']):
+def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=[''], ICA_models = {}):
     pca_results = {}
     ica_results = {}
     valid_data, invalid_categories = da.validate_categorized_data(categorized_data)
@@ -149,17 +149,26 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 ica = FastICA(n_components=num_of_components, tol=0.1, random_state=0, max_iter=1000)
-                ica_components = ica.fit_transform(data)
+                if not category in ICA_models:
+                    ica.fit(data)
+                    ica_components = ica.transform(data)
+                    #append ICA model to the dictionary
+                    ICA_models[category] = ica
+                    ica_log = f"ICA for category: {category}"
+                    ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
+                    proc_logs[0] += f"\n{ica_log}"
+                else:
+                    ica_components = ICA_models[category].transform(data)
+                    ica_log = f"ICA for category: {category} - Components transformed"
                 if len(w) > 0 and "did not converge" in str(w[-1].message):
                     raise UserWarning("ICA failed to converge")
         except UserWarning as e:
             print(f'apply_ica_to_categories: converge failure - {str(e)}')
             proc_logs[0] += f"{LOG_SEPARATOR}ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
             continue
-
         ica_results[category] = ica_components
-        ica_log = f"{LOG_SEPARATOR}Components exported with: ICA{LOG_SEPARATOR}Number of iterations: {ica.n_iter_} from max iterations: 1000 ~ {"Converged" if ica.n_iter_ / 1000 < 1.00 else "Not converged!"}"
-        proc_logs[0] += f"\n{ica_log}"
+        #print the results if fitting has been done (not only transform)
+        
         print(ica_log)
     print("-------------------" )
 
