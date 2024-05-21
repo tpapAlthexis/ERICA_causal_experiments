@@ -143,6 +143,8 @@ if __name__ == "__main__":
         test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, ica_models=ica_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
+        total_training_components = train_features.shape[0]
+
         print("Reading data...")
         arousal_train_targets = train_targets['median_' + gl.AROUSAL]
         valence_train_targets = train_targets['median_' + gl.VALENCE]
@@ -180,6 +182,9 @@ if __name__ == "__main__":
         #drop train features that are not in arousal_edges & valence_edges
         train_features_gr_arousal = get_selected_features(arousal_edges, train_features)
         train_features_gr_valence = get_selected_features(valence_edges, train_features)
+
+        total_selected_features_arousal = train_features_gr_arousal.shape[1]
+        total_selected_features_valence = train_features_gr_valence.shape[1]
 
         if train_features_gr_arousal is None or train_features_gr_valence is None:
             print(f'No features selected for arousal or valence in fold {fold_cnt}. Skipping fold...')
@@ -222,6 +227,9 @@ if __name__ == "__main__":
             f'Reg Valence PCC: {valence_reg_pcc}', 
             f'Causal Arousal PCC: {arousal_causal_pcc}', 
             f'Causal Valence PCC: {valence_causal_pcc}'
+            f'Training components: {total_training_components}',
+            f'N features for arousal: {total_selected_features_arousal}',
+            f'N features for valence: {total_selected_features_valence}'
         )
         fold_cnt += 1
 
