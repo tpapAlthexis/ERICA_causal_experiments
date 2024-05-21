@@ -237,9 +237,7 @@ if __name__ == "__main__":
             f'Reg Arousal PCC: {arousal_reg_pcc}', 
             f'Reg Valence PCC: {valence_reg_pcc}', 
             f'Causal Arousal PCC: {arousal_causal_pcc}', 
-            f'Causal Valence PCC: {valence_causal_pcc}',
-            f'Baseline Arousal Kendall: {calculate_kendall_tau(arousal_test_targets, baseline_arousal_predictions)}',
-            f'Baseline Valence Kendall: {calculate_kendall_tau(valence_test_targets, baseline_valence_predictions)}',
+            f'Causal Valence PCC: {valence_causal_pcc}'
         )
         fold_cnt += 1
 
