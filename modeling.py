@@ -110,6 +110,40 @@ def print_results(fold, *args):
         print(f'- {arg}')
     print('-------------------------------------------------')
 
+def evaluate_baseline_model(train_f, train_t, test_f, test_t):
+    if not train_f or not train_t or not test_f or not test_t:
+        print("evaluate_baseline_model: Missing data.")
+        return
+    
+    arousal_train_targets = train_targets['median_' + gl.AROUSAL]
+    valence_train_targets = train_targets['median_' + gl.VALENCE]
+
+    arousal_test_targets = test_targets['median_' + gl.AROUSAL]
+    valence_test_targets = test_targets['median_' + gl.VALENCE]
+
+    if not arousal_train_targets or not valence_train_targets or not arousal_test_targets or not valence_test_targets:
+        print("evaluate_baseline_model: Missing arousal/valence targets.")
+        return
+    
+    baselineArousalModel = LinearRegression()
+    baselineValenceModel = LinearRegression()
+
+    baselineArousalModel = train_model(baselineArousalModel, train_f, arousal_train_targets)
+    baselineValenceModel = train_model(baselineValenceModel, train_f, valence_train_targets)
+
+    baseline_arousal_predictions = predict_model(baselineArousalModel, test_f)
+    baseline_valence_predictions = predict_model(baselineValenceModel, test_f)
+
+    arousal_baseline_kendall = calculate_kendall_tau(arousal_test_targets, baseline_arousal_predictions)
+    valence_baseline_kendall = calculate_kendall_tau(valence_test_targets, baseline_valence_predictions)
+
+    arousal_baseline_pcc = calculate_pcc(arousal_test_targets, baseline_arousal_predictions)
+    valence_baseline_pcc = calculate_pcc(valence_test_targets, baseline_valence_predictions)
+
+    # return the print results
+    return {'arousal_baseline_kendall': arousal_baseline_kendall, 'valence_baseline_kendall': valence_baseline_kendall,
+            'arousal_baseline_pcc': arousal_baseline_pcc, 'valence_baseline_pcc': valence_baseline_pcc}
+
 if __name__ == "__main__":
     p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
     if p_to_avoid:
@@ -117,6 +151,8 @@ if __name__ == "__main__":
 
     participants = gl.getParticipants(DATASET)
     participants = [p for p in participants if p not in p_to_avoid]
+
+    FOLDS = len(participants) #as many as RECOLA participants. Leave-one-out cross-validation
 
     # Initialize the k-Fold cross-validator
     kf = KFold(n_splits=FOLDS, shuffle=True, random_state=1)
@@ -136,6 +172,8 @@ if __name__ == "__main__":
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
+        baseline_model_output = evaluate_baseline_model(train_features, train_targets, test_features, test_targets)
+
         ica_models = {}
         print("Reading training data...")
         train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, ica_models=ica_models)
@@ -143,7 +181,7 @@ if __name__ == "__main__":
         test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, ica_models=ica_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
-        total_training_components = train_features.shape[0]
+        total_training_components = train_features.shape[1]
 
         print("Reading data...")
         arousal_train_targets = train_targets['median_' + gl.AROUSAL]
@@ -151,6 +189,10 @@ if __name__ == "__main__":
 
         arousal_test_targets = test_targets['median_' + gl.AROUSAL]
         valence_test_targets = test_targets['median_' + gl.VALENCE]
+
+        if not arousal_train_targets or not valence_train_targets or not arousal_test_targets or not valence_test_targets:
+            print("Missing arousal/valence targets at fold:", fold_cnt)
+            continue
 
         print("Training regression model...")
         regArousalModel = train_model(regArousalModel, train_features, arousal_train_targets)
@@ -226,7 +268,7 @@ if __name__ == "__main__":
             f'Reg Arousal PCC: {arousal_reg_pcc}', 
             f'Reg Valence PCC: {valence_reg_pcc}', 
             f'Causal Arousal PCC: {arousal_causal_pcc}', 
-            f'Causal Valence PCC: {valence_causal_pcc}'
+            f'Causal Valence PCC: {valence_causal_pcc}',
             f'Training components: {total_training_components}',
             f'N features for arousal: {total_selected_features_arousal}',
             f'N features for valence: {total_selected_features_valence}'
