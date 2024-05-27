@@ -27,8 +27,8 @@ FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
 def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
-        selected_features = gl.Selected_audio_features + gl.Selected_video_features
-        data = data[selected_features]  # Filter columns based on selected features
+        # selected_features = gl.Selected_audio_features + gl.Selected_video_features
+        # data = data[selected_features]  # Filter columns based on selected features
         return data, annotations
 
     categorized_data = da.categorize_columns(data)
@@ -110,10 +110,9 @@ def print_results(fold, *args):
         print(f'- {arg}')
     print('-------------------------------------------------')
 
-def evaluate_baseline_model(train_f, train_t, test_f, test_t):
-    if not train_f or not train_t or not test_f or not test_t:
-        print("evaluate_baseline_model: Missing data.")
-        return
+def evaluate_baseline_model(train_participants, test_participants):
+    train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False)
+    test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=False)
     
     arousal_train_targets = train_targets['median_' + gl.AROUSAL]
     valence_train_targets = train_targets['median_' + gl.VALENCE]
@@ -121,18 +120,18 @@ def evaluate_baseline_model(train_f, train_t, test_f, test_t):
     arousal_test_targets = test_targets['median_' + gl.AROUSAL]
     valence_test_targets = test_targets['median_' + gl.VALENCE]
 
-    if not arousal_train_targets or not valence_train_targets or not arousal_test_targets or not valence_test_targets:
+    if len(arousal_train_targets) == 0 or len(valence_train_targets) == 0 or len(arousal_test_targets) == 0 or len(valence_test_targets) == 0:
         print("evaluate_baseline_model: Missing arousal/valence targets.")
         return
     
     baselineArousalModel = LinearRegression()
     baselineValenceModel = LinearRegression()
 
-    baselineArousalModel = train_model(baselineArousalModel, train_f, arousal_train_targets)
-    baselineValenceModel = train_model(baselineValenceModel, train_f, valence_train_targets)
+    baselineArousalModel = train_model(baselineArousalModel, train_features, arousal_train_targets)
+    baselineValenceModel = train_model(baselineValenceModel, train_features, valence_train_targets)
 
-    baseline_arousal_predictions = predict_model(baselineArousalModel, test_f)
-    baseline_valence_predictions = predict_model(baselineValenceModel, test_f)
+    baseline_arousal_predictions = predict_model(baselineArousalModel, test_features)
+    baseline_valence_predictions = predict_model(baselineValenceModel, test_features)
 
     arousal_baseline_kendall = calculate_kendall_tau(arousal_test_targets, baseline_arousal_predictions)
     valence_baseline_kendall = calculate_kendall_tau(valence_test_targets, baseline_valence_predictions)
@@ -172,14 +171,16 @@ if __name__ == "__main__":
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
-        baseline_model_output = evaluate_baseline_model(train_features, train_targets, test_features, test_targets)
-
         ica_models = {}
         print("Reading training data...")
         train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, ica_models=ica_models)
         print("Reading testing data...")
         test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, ica_models=ica_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
+
+        print("Evaluating baseline model...")
+        baseline_model_output = evaluate_baseline_model(train_participants, test_participants)
+        print(f'Baseline model finished.')
 
         total_training_components = train_features.shape[1]
 
@@ -190,7 +191,7 @@ if __name__ == "__main__":
         arousal_test_targets = test_targets['median_' + gl.AROUSAL]
         valence_test_targets = test_targets['median_' + gl.VALENCE]
 
-        if not arousal_train_targets or not valence_train_targets or not arousal_test_targets or not valence_test_targets:
+        if len(arousal_train_targets) == 0 or len(valence_train_targets) == 0:
             print("Missing arousal/valence targets at fold:", fold_cnt)
             continue
 
