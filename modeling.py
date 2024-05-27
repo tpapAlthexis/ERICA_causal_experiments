@@ -261,6 +261,7 @@ if __name__ == "__main__":
 
         print_results(
             fold_cnt, 
+            f'{baseline_model_output}',
             f'Reg Arousal Kendall: {arousal_reg_kendall}', 
             f'Reg Valence Kendall: {valence_reg_kendall}', 
             f'Causal Arousal Kendall: {arousal_causal_kendall}', 
@@ -278,7 +279,11 @@ if __name__ == "__main__":
         modeling_results[fold_cnt] = {'reg_arousal_kendall': arousal_reg_kendall, 'reg_valence_kendall': valence_reg_kendall,
                                       'causal_arousal_kendall': arousal_causal_kendall, 'causal_valence_kendall': valence_causal_kendall,
                                       'reg_arousal_pcc': arousal_reg_pcc, 'reg_valence_pcc': valence_reg_pcc,
-                                      'causal_arousal_pcc': arousal_causal_pcc, 'causal_valence_pcc': valence_causal_pcc}
+                                      'causal_arousal_pcc': arousal_causal_pcc, 'causal_valence_pcc': valence_causal_pcc,
+                                      'baseline_arousal_kendall': baseline_model_output['arousal_baseline_kendall'],
+                                      'baseline_valence_kendall': baseline_model_output['valence_baseline_kendall'],
+                                      'baseline_arousal_pcc': baseline_model_output['arousal_baseline_pcc'],
+                                      'baseline_valence_pcc': baseline_model_output['valence_baseline_pcc']}
 
     # print result summary for all folds
     print('Modeling results summary:')
