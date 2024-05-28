@@ -4,6 +4,7 @@ from sklearn.svm import SVR
 import numpy as np
 from sklearn.metrics import make_scorer
 from scipy import stats
+from tabulate import tabulate
 
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.utils.cit import fisherz
@@ -24,6 +25,39 @@ DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
 FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
 
+# key measures enums
+Graph_Metrics_str = "Graph Metrics"
+class Graph_Metrics:
+    TOTAL_AROUSAL_TARGETS = 'total_arousal_targets'
+    TOTAL_VALENCE_TARGETS = 'total_valence_targets'
+    TOTAL_EDGES = 'total_edges'
+    TOTAL_MEASURES = 'total_measures'
+
+Components_Metrics_str = "Components Metrics"
+class Components_Metrics:
+    TOTAL_COMPONENTS = 'total_components'
+    TOTAL_SELECTED_COMPONENTS = 'total_selected_components'
+    TOTAL_SELECTED_COMPONENTS_AROUSAL = 'total_selected_components_arousal'
+    TOTAL_SELECTED_COMPONENTS_VALENCE = 'total_selected_components_valence'
+
+Model_Metrics_str = "Model Metrics"
+class Model_Metrics:
+    REG_AROUSAL_KENDALL = 'reg_arousal_kendall'
+    REG_VALENCE_KENDALL = 'reg_valence_kendall'
+    CAUSAL_AROUSAL_KENDALL = 'causal_arousal_kendall'
+    CAUSAL_VALENCE_KENDALL = 'causal_valence_kendall'
+    REG_AROUSAL_PCC = 'reg_arousal_pcc'
+    REG_VALENCE_PCC = 'reg_valence_pcc'
+    CAUSAL_AROUSAL_PCC = 'causal_arousal_pcc'
+    CAUSAL_VALENCE_PCC = 'causal_valence_pcc'
+
+Baseline_Metrics_str = "Baseline Metrics"
+class Baseline_Metrics:
+    AROUSAL_BASELINE_KENDALL = 'arousal_baseline_kendall'
+    VALENCE_BASELINE_KENDALL = 'valence_baseline_kendall'
+    AROUSAL_BASELINE_PCC = 'arousal_baseline_pcc'
+    VALENCE_BASELINE_PCC = 'valence_baseline_pcc'
+
 def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
@@ -35,7 +69,7 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):
     #keep only the features we are interested in
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
-    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, 15, ICA_models=ica_models)
+    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, 5, ICA_models=ica_models)
     flattened_data = pd.DataFrame()
     for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
@@ -104,11 +138,14 @@ def calculate_pcc(test_targets, predictions):
     pcc, _ = stats.pearsonr(test_targets, predictions)
     return pcc
 
-def print_results(fold, *args):
-    print(f'Fold {fold} results:')
-    for arg in args:
-        print(f'- {arg}')
-    print('-------------------------------------------------')
+def print_results(results):
+    for key, value in results.items():
+        print(f"\n{key}:")
+        if isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                print(f"{sub_key}: {sub_value}")
+        else:
+            print(value)
 
 def evaluate_baseline_model(train_participants, test_participants):
     train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False)
@@ -139,9 +176,14 @@ def evaluate_baseline_model(train_participants, test_participants):
     arousal_baseline_pcc = calculate_pcc(arousal_test_targets, baseline_arousal_predictions)
     valence_baseline_pcc = calculate_pcc(valence_test_targets, baseline_valence_predictions)
 
-    # return the print results
-    return {'arousal_baseline_kendall': arousal_baseline_kendall, 'valence_baseline_kendall': valence_baseline_kendall,
-            'arousal_baseline_pcc': arousal_baseline_pcc, 'valence_baseline_pcc': valence_baseline_pcc}
+    baseline_results = {
+        Baseline_Metrics.AROUSAL_BASELINE_KENDALL: arousal_baseline_kendall,
+        Baseline_Metrics.VALENCE_BASELINE_KENDALL: valence_baseline_kendall,
+        Baseline_Metrics.AROUSAL_BASELINE_PCC: arousal_baseline_pcc,
+        Baseline_Metrics.VALENCE_BASELINE_PCC: valence_baseline_pcc
+    }
+
+    return baseline_results
 
 if __name__ == "__main__":
     p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
@@ -156,11 +198,12 @@ if __name__ == "__main__":
     # Initialize the k-Fold cross-validator
     kf = KFold(n_splits=FOLDS, shuffle=True, random_state=1)
 
-    fold_cnt = 1
+    fold_cnt = 0
     modeling_results = dict()
 
     # Perform k-fold cross-validation
     for train_index, test_index in kf.split(participants):
+        fold_cnt += 1
         print("Fold number:", fold_cnt)
         # Initialize the SVR models
         regArousalModel = LinearRegression()
@@ -179,7 +222,7 @@ if __name__ == "__main__":
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         print("Evaluating baseline model...")
-        baseline_model_output = evaluate_baseline_model(train_participants, test_participants)
+        baseline_results = evaluate_baseline_model(train_participants, test_participants)
         print(f'Baseline model finished.')
 
         total_training_components = train_features.shape[1]
@@ -260,52 +303,65 @@ if __name__ == "__main__":
         arousal_causal_pcc = calculate_pcc(arousal_test_targets, causal_arousal_predictions)
         valence_causal_pcc = calculate_pcc(valence_test_targets, causal_valence_predictions)
 
-        print_results(
-            fold_cnt, 
-            f'{baseline_model_output}',
-            f'Reg Arousal Kendall: {arousal_reg_kendall}', 
-            f'Reg Valence Kendall: {valence_reg_kendall}', 
-            f'Causal Arousal Kendall: {arousal_causal_kendall}', 
-            f'Causal Valence Kendall: {valence_causal_kendall}',
-            f'Reg Arousal PCC: {arousal_reg_pcc}', 
-            f'Reg Valence PCC: {valence_reg_pcc}', 
-            f'Causal Arousal PCC: {arousal_causal_pcc}', 
-            f'Causal Valence PCC: {valence_causal_pcc}',
-            f'Training components: {total_training_components}',
-            f'N features for arousal: {total_selected_features_arousal}',
-            f'N features for valence: {total_selected_features_valence}'
-        )
-        fold_cnt += 1
+        print("Finished evaluating the models...")
 
-        modeling_results[fold_cnt] = {'reg_arousal_kendall': arousal_reg_kendall, 'reg_valence_kendall': valence_reg_kendall,
-                                      'causal_arousal_kendall': arousal_causal_kendall, 'causal_valence_kendall': valence_causal_kendall,
-                                      'reg_arousal_pcc': arousal_reg_pcc, 'reg_valence_pcc': valence_reg_pcc,
-                                      'causal_arousal_pcc': arousal_causal_pcc, 'causal_valence_pcc': valence_causal_pcc,
-                                      'baseline_arousal_kendall': baseline_model_output['arousal_baseline_kendall'],
-                                      'baseline_valence_kendall': baseline_model_output['valence_baseline_kendall'],
-                                      'baseline_arousal_pcc': baseline_model_output['arousal_baseline_pcc'],
-                                      'baseline_valence_pcc': baseline_model_output['valence_baseline_pcc']}
+        graph_results = {
+            Graph_Metrics.TOTAL_AROUSAL_TARGETS: len(arousal_edges),
+            Graph_Metrics.TOTAL_VALENCE_TARGETS: len(valence_edges),
+            Graph_Metrics.TOTAL_EDGES: len(resp_edges),
+            Graph_Metrics.TOTAL_MEASURES: len(train_features.columns)
+        }
 
-    # print result summary for all folds
-    print('Modeling results summary:')
-    for fold, results in modeling_results.items():
-        print(f'Fold {fold} results: {results}')
+        components_results = {
+            Components_Metrics.TOTAL_COMPONENTS: total_training_components,
+            Components_Metrics.TOTAL_SELECTED_COMPONENTS: total_selected_features_arousal + total_selected_features_valence,
+            Components_Metrics.TOTAL_SELECTED_COMPONENTS_AROUSAL: total_selected_features_arousal,
+            Components_Metrics.TOTAL_SELECTED_COMPONENTS_VALENCE: total_selected_features_valence
+        }
+
+        #assign model metrics to a string
+        prediction_results = {
+            Model_Metrics.REG_AROUSAL_KENDALL: arousal_reg_kendall,
+            Model_Metrics.REG_VALENCE_KENDALL: valence_reg_kendall,
+            Model_Metrics.CAUSAL_AROUSAL_KENDALL: arousal_causal_kendall,
+            Model_Metrics.CAUSAL_VALENCE_KENDALL: valence_causal_kendall,
+            Model_Metrics.REG_AROUSAL_PCC: arousal_reg_pcc,
+            Model_Metrics.REG_VALENCE_PCC: valence_reg_pcc,
+            Model_Metrics.CAUSAL_AROUSAL_PCC: arousal_causal_pcc,
+            Model_Metrics.CAUSAL_VALENCE_PCC: valence_causal_pcc
+        }
+
+        results_summary = {
+            'Graph Metrics': graph_results,
+            'Components Metrics': components_results,
+            'Model Metrics': prediction_results,
+            'Baseline Metrics': baseline_results
+        }
+
+        print(f'------------ Results@fold {fold_cnt} --------------')
+        print_results(results_summary)
+        print('----------------------------------------------------')
+
+        modeling_results[fold_cnt] = results_summary
+
+    mean_results = {}
+    for fold, value in modeling_results.items():
+        for sub_key, sub_value in value.items():
+            if sub_key not in mean_results:
+                mean_results[sub_key] = {}
+            for metric_key, metric_value in sub_value.items():
+                if metric_key not in mean_results[sub_key]:
+                    mean_results[sub_key][metric_key] = 0
+                mean_results[sub_key][metric_key] += metric_value
     
-    # print mean values for all folds
-    arousal_reg_kendall = np.mean([results['reg_arousal_kendall'] for results in modeling_results.values()])
-    valence_reg_kendall = np.mean([results['reg_valence_kendall'] for results in modeling_results.values()])
-    arousal_causal_kendall = np.mean([results['causal_arousal_kendall'] for results in modeling_results.values()])
-    valence_causal_kendall = np.mean([results['causal_valence_kendall'] for results in modeling_results.values()])
-    arousal_reg_pcc = np.mean([results['reg_arousal_pcc'] for results in modeling_results.values()])
-    valence_reg_pcc = np.mean([results['reg_valence_pcc'] for results in modeling_results.values()])
-    arousal_causal_pcc = np.mean([results['causal_arousal_pcc'] for results in modeling_results.values()])
-    valence_causal_pcc = np.mean([results['causal_valence_pcc'] for results in modeling_results.values()])
+    for key, value in mean_results.items():
+        for metric_key, metric_value in value.items():
+            mean_results[key][metric_key] = metric_value / fold_cnt
 
-    print('Mean values:')
-    print(f'Reg Arousal Kendall:{arousal_reg_kendall}, Reg Valence Kendall:{valence_reg_kendall}')
-    print(f'Causal Arousal Kendall:{arousal_causal_kendall}, Causal Valence Kendall:{valence_causal_kendall}')
-    print(f'Reg Arousal PCC:{arousal_reg_pcc}, Reg Valence PCC:{valence_reg_pcc}')
-    print(f'Causal Arousal PCC:{arousal_causal_pcc}, Causal Valence PCC:{valence_causal_pcc}')
+    # Print the results
+    print('------------ Mean values --------------')
+    print_results(mean_results)
+    print('---------------------------------------')
        
         
 
