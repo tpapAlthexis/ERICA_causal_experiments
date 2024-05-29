@@ -24,6 +24,7 @@ from sklearn.model_selection import KFold
 DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
 FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
+COMP_THRESHOLD = 10
 
 # key measures enums
 Graph_Metrics_str = "Graph Metrics"
@@ -69,7 +70,7 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):
     #keep only the features we are interested in
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
-    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, 5, ICA_models=ica_models)
+    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=ica_models)
     flattened_data = pd.DataFrame()
     for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
