@@ -24,6 +24,7 @@ from sklearn.model_selection import KFold
 DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
 FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
+COMP_THRESHOLD = 5
 
 # key measures enums
 Graph_Metrics_str = "Graph Metrics"
@@ -69,7 +70,7 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):
     #keep only the features we are interested in
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
-    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, 5, ICA_models=ica_models)
+    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=ica_models)
     flattened_data = pd.DataFrame()
     for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
@@ -319,7 +320,6 @@ if __name__ == "__main__":
             Components_Metrics.TOTAL_SELECTED_COMPONENTS_VALENCE: total_selected_features_valence
         }
 
-        #assign model metrics to a string
         prediction_results = {
             Model_Metrics.REG_AROUSAL_KENDALL: arousal_reg_kendall,
             Model_Metrics.REG_VALENCE_KENDALL: valence_reg_kendall,
@@ -362,13 +362,20 @@ if __name__ == "__main__":
     print('------------ Mean values --------------')
     print_results(mean_results)
     print('---------------------------------------')
-       
-        
 
-    
+    comp_vs_arousal_comp = mean_results[Components_Metrics_str][Components_Metrics.TOTAL_SELECTED_COMPONENTS_AROUSAL] / mean_results[Components_Metrics_str][Components_Metrics.TOTAL_COMPONENTS]
+    comp_vs_valence_comp = mean_results[Components_Metrics_str][Components_Metrics.TOTAL_SELECTED_COMPONENTS_VALENCE] / mean_results[Components_Metrics_str][Components_Metrics.TOTAL_COMPONENTS]
 
+    causal_arousal_vs_pred_arousal = mean_results[Model_Metrics_str][Model_Metrics.CAUSAL_AROUSAL_KENDALL] / mean_results[Model_Metrics_str][Model_Metrics.REG_AROUSAL_KENDALL]
+    causal_valence_vs_pred_valence = mean_results[Model_Metrics_str][Model_Metrics.CAUSAL_VALENCE_KENDALL] / mean_results[Model_Metrics_str][Model_Metrics.REG_VALENCE_KENDALL]
 
-    
-    
+    pred_arousal_vs_baseline_arousal = mean_results[Model_Metrics_str][Model_Metrics.REG_AROUSAL_KENDALL] / mean_results[Baseline_Metrics_str][Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
+    pred_valence_vs_baseline_valence = mean_results[Model_Metrics_str][Model_Metrics.REG_VALENCE_KENDALL] / mean_results[Baseline_Metrics_str][Baseline_Metrics.VALENCE_BASELINE_KENDALL]
 
-    
+    print(f'Percentage of reg performance vs baseline performance for arousal: {100.00 * pred_arousal_vs_baseline_arousal:.2f}')
+    print(f'Percentage of components selected for arousal: {comp_vs_arousal_comp:.2f}')
+    print(f'Percentage of causal model performance vs regression model performance for arousal: {100.00 * causal_arousal_vs_pred_arousal:.2f}')
+    print(f'----------------------------------------------------')
+    print(f'Percentage of reg performance vs baseline performance for valence: {100.00 * pred_valence_vs_baseline_valence:.2f}')
+    print(f'Percentage of components selected for valence: {comp_vs_valence_comp:.2f}')
+    print(f'Percentage of causal model performance vs regression model performance for valence: {100.00 * causal_valence_vs_pred_valence:.2f}')
