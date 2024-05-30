@@ -71,6 +71,7 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
     component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=ica_models)
+    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=ica_models)
     flattened_data = pd.DataFrame()
     for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
