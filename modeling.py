@@ -1,5 +1,8 @@
 import pandas as pd
+from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+
 from sklearn.svm import SVR
 import numpy as np
 from sklearn.metrics import make_scorer
@@ -80,6 +83,9 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):
                 flattened_data[new_key] = data[:, i]
     return flattened_data, annotations
    
+def model_init():
+    return MLPRegressor(hidden_layer_sizes=(8,), activation='relu', solver='adam', max_iter=1000, random_state=1)
+
 def get_comp_to_response(graph):
     if not graph:
         print("get_edge_histogram: No graphs provided.")
@@ -163,8 +169,8 @@ def evaluate_baseline_model(train_participants, test_participants):
         print("evaluate_baseline_model: Missing arousal/valence targets.")
         return
     
-    baselineArousalModel = LinearRegression()
-    baselineValenceModel = LinearRegression()
+    baselineArousalModel = model_init()
+    baselineValenceModel = model_init()
 
     baselineArousalModel = train_model(baselineArousalModel, train_features, arousal_train_targets)
     baselineValenceModel = train_model(baselineValenceModel, train_features, valence_train_targets)
@@ -208,10 +214,10 @@ if __name__ == "__main__":
         fold_cnt += 1
         print("Fold number:", fold_cnt)
         # Initialize the SVR models
-        regArousalModel = LinearRegression()
-        regValenceModel = LinearRegression()
-        causalRegArousal = LinearRegression()
-        causalRegValence = LinearRegression()
+        regArousalModel = model_init()
+        regValenceModel = model_init()
+        causalRegArousal = model_init()
+        causalRegValence = model_init()
 
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
