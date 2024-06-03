@@ -9,6 +9,10 @@ from sklearn.metrics import make_scorer
 from scipy import stats
 from tabulate import tabulate
 
+from bokeh.models import ColumnDataSource, Div
+from bokeh.layouts import column
+from bokeh.io import output_file, save
+
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.utils.cit import fisherz
 from causallearn.graph.Edge import Edge
@@ -24,10 +28,22 @@ import globals as gl
 import independence_causal as ic
 from sklearn.model_selection import KFold
 
+class Modeling:
+    LinearRegression = 1
+    MLP = 2
+    SVR = 3
+
+ModelingNames = {
+    Modeling.LinearRegression: 'Linear Regression',
+    Modeling.MLP: 'MLP',
+    Modeling.SVR: 'SVR'
+}
+
 DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
 FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
 COMP_THRESHOLD = 5
+MODELING = Modeling.LinearRegression
 
 # key measures enums
 Graph_Metrics_str = "Graph Metrics"
@@ -62,11 +78,76 @@ class Baseline_Metrics:
     AROUSAL_BASELINE_PCC = 'arousal_baseline_pcc'
     VALENCE_BASELINE_PCC = 'valence_baseline_pcc'
 
-def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):   
+class ExperimentResults:
+    def __init__(self, mean_results, fold_cnt, DATASET, MODELING, model_init, FOLDS, COMP_THRESHOLD, Components_Metrics_str, Components_Metrics, Model_Metrics_str, Model_Metrics, Baseline_Metrics_str, Baseline_Metrics):
+        self.mean_results = mean_results
+        self.fold_cnt = fold_cnt
+        self.DATASET = DATASET
+        self.MODELING = MODELING
+        self.model_init = model_init
+        self.FOLDS = FOLDS
+        self.COMP_THRESHOLD = COMP_THRESHOLD
+        self.Components_Metrics_str = Components_Metrics_str
+        self.Components_Metrics = Components_Metrics
+        self.Model_Metrics_str = Model_Metrics_str
+        self.Model_Metrics = Model_Metrics
+        self.Baseline_Metrics_str = Baseline_Metrics_str
+        self.Baseline_Metrics = Baseline_Metrics
+
+    def calculate_additional_metrics(self):
+        self.comp_vs_arousal_comp = self.mean_results[self.Components_Metrics_str][self.Components_Metrics.TOTAL_SELECTED_COMPONENTS_AROUSAL] / self.mean_results[self.Components_Metrics_str][self.Components_Metrics.TOTAL_COMPONENTS]
+        self.comp_vs_valence_comp = self.mean_results[self.Components_Metrics_str][self.Components_Metrics.TOTAL_SELECTED_COMPONENTS_VALENCE] / self.mean_results[self.Components_Metrics_str][self.Components_Metrics.TOTAL_COMPONENTS]
+
+        self.causal_arousal_vs_pred_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_KENDALL] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_KENDALL]
+        self.causal_valence_vs_pred_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_KENDALL] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_KENDALL]
+
+        self.pred_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
+        self.pred_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_KENDALL]
+
+    def print_experiment_results(self):
+        # Calculate mean results
+        for key, value in self.mean_results.items():
+            for metric_key, metric_value in value.items():
+                self.mean_results[key][metric_key] = metric_value / self.fold_cnt
+
+        # Print experiment setup
+        print(f'--------- Experiment setup ------------')
+        print(f'Dataset: {gl.DatasetNames[self.DATASET]}')
+        print(f'Modeling: {ModelingNames[self.MODELING]}')
+        model = self.model_init()
+        print(f'Model parameters: {model.get_params()}')
+        print(f'Folds: {self.FOLDS}')
+        print(f'Components threshold: {self.COMP_THRESHOLD}')
+        print(f'---------------------------------------')
+
+        # Print the results
+        print('------------ Mean values --------------')
+        print_results(self.mean_results)
+        print('---------------------------------------')
+
+        # Calculate additional metrics
+        self.calculate_additional_metrics()
+
+        # Print additional metrics
+        print(f'Percentage of reg performance vs baseline performance for arousal: {100.00 * self.pred_arousal_vs_baseline_arousal:.2f}')
+        print(f'Percentage of components selected for arousal: {self.comp_vs_arousal_comp:.2f}')
+        print(f'Percentage of causal model performance vs regression model performance for arousal: {100.00 * self.causal_arousal_vs_pred_arousal:.2f}')
+        print(f'----------------------------------------------------')
+        print(f'Percentage of reg performance vs baseline performance for valence: {100.00 * self.pred_valence_vs_baseline_valence:.2f}')
+        print(f'Percentage of components selected for valence: {self.comp_vs_valence_comp:.2f}')
+        print(f'Percentage of causal model performance vs regression model performance for valence: {100.00 * self.causal_valence_vs_pred_valence:.2f}')
+
+def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=True):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
         # selected_features = gl.Selected_audio_features + gl.Selected_video_features
         # data = data[selected_features]  # Filter columns based on selected features
+        if shuffle:
+            indices = np.random.permutation(len(data))
+
+            data = data.iloc[indices]
+            annotations = annotations.iloc[indices]
+
         return data, annotations
 
     categorized_data = da.categorize_columns(data)
@@ -81,10 +162,22 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}):
             for i in range(data.shape[1]):
                 new_key = f"{category}_comp_{i+1}"
                 flattened_data[new_key] = data[:, i]
+
+    if shuffle:
+        indices = np.random.permutation(len(flattened_data))
+
+        flattened_data = flattened_data.iloc[indices]
+        annotations = annotations.iloc[indices]
+
     return flattened_data, annotations
    
-def model_init():
-    return MLPRegressor(hidden_layer_sizes=(8,), activation='relu', solver='adam', max_iter=1000, random_state=1)
+def model_init(model = MODELING):
+    if model == Modeling.MLP:
+        return MLPRegressor(hidden_layer_sizes=(8,), activation='relu', solver='adam', max_iter=1000, random_state=1, batch_size=150, shuffle=True)
+    elif model == Modeling.SVR:
+        return SVR(kernel='rbf', C=1, gamma='scale', epsilon=0.1)
+    else:
+        return LinearRegression()
 
 def get_comp_to_response(graph):
     if not graph:
@@ -339,6 +432,7 @@ if __name__ == "__main__":
         }
 
         results_summary = {
+            'Test Participant': {'Participant': test_participants},
             'Graph Metrics': graph_results,
             'Components Metrics': components_results,
             'Model Metrics': prediction_results,
@@ -353,10 +447,17 @@ if __name__ == "__main__":
 
     mean_results = {}
     for fold, value in modeling_results.items():
+        if not isinstance(value, dict):
+            print(f'Value {value} is not hashable. Skipping...')
+            continue
+
         for sub_key, sub_value in value.items():
             if sub_key not in mean_results:
                 mean_results[sub_key] = {}
             for metric_key, metric_value in sub_value.items():
+                if not isinstance(metric_value, (int, float)):
+                    mean_results.pop(sub_key, None)
+                    continue
                 if metric_key not in mean_results[sub_key]:
                     mean_results[sub_key][metric_key] = 0
                 mean_results[sub_key][metric_key] += metric_value
@@ -365,24 +466,5 @@ if __name__ == "__main__":
         for metric_key, metric_value in value.items():
             mean_results[key][metric_key] = metric_value / fold_cnt
 
-    # Print the results
-    print('------------ Mean values --------------')
-    print_results(mean_results)
-    print('---------------------------------------')
-
-    comp_vs_arousal_comp = mean_results[Components_Metrics_str][Components_Metrics.TOTAL_SELECTED_COMPONENTS_AROUSAL] / mean_results[Components_Metrics_str][Components_Metrics.TOTAL_COMPONENTS]
-    comp_vs_valence_comp = mean_results[Components_Metrics_str][Components_Metrics.TOTAL_SELECTED_COMPONENTS_VALENCE] / mean_results[Components_Metrics_str][Components_Metrics.TOTAL_COMPONENTS]
-
-    causal_arousal_vs_pred_arousal = mean_results[Model_Metrics_str][Model_Metrics.CAUSAL_AROUSAL_KENDALL] / mean_results[Model_Metrics_str][Model_Metrics.REG_AROUSAL_KENDALL]
-    causal_valence_vs_pred_valence = mean_results[Model_Metrics_str][Model_Metrics.CAUSAL_VALENCE_KENDALL] / mean_results[Model_Metrics_str][Model_Metrics.REG_VALENCE_KENDALL]
-
-    pred_arousal_vs_baseline_arousal = mean_results[Model_Metrics_str][Model_Metrics.REG_AROUSAL_KENDALL] / mean_results[Baseline_Metrics_str][Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
-    pred_valence_vs_baseline_valence = mean_results[Model_Metrics_str][Model_Metrics.REG_VALENCE_KENDALL] / mean_results[Baseline_Metrics_str][Baseline_Metrics.VALENCE_BASELINE_KENDALL]
-
-    print(f'Percentage of reg performance vs baseline performance for arousal: {100.00 * pred_arousal_vs_baseline_arousal:.2f}')
-    print(f'Percentage of components selected for arousal: {comp_vs_arousal_comp:.2f}')
-    print(f'Percentage of causal model performance vs regression model performance for arousal: {100.00 * causal_arousal_vs_pred_arousal:.2f}')
-    print(f'----------------------------------------------------')
-    print(f'Percentage of reg performance vs baseline performance for valence: {100.00 * pred_valence_vs_baseline_valence:.2f}')
-    print(f'Percentage of components selected for valence: {comp_vs_valence_comp:.2f}')
-    print(f'Percentage of causal model performance vs regression model performance for valence: {100.00 * causal_valence_vs_pred_valence:.2f}')
+    experiment = ExperimentResults(mean_results, fold_cnt, DATASET, MODELING, model_init, FOLDS, COMP_THRESHOLD, Components_Metrics_str, Components_Metrics, Model_Metrics_str, Model_Metrics, Baseline_Metrics_str, Baseline_Metrics)
+    experiment.print_experiment_results()
