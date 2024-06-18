@@ -300,7 +300,7 @@ def create_experiment_report(exp_results, file_path):
         <h1>Experiment Report for {CUSTOM_EXP_TITLE}</h1>
         <h2>Experiment Setup</h2>
         <p><b>Timestamp:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-        <p><b>Duration:</b> {exp_results.Duration.total_seconds() // 60}:{exp_results.Duration.total_seconds() % 60}:{exp_results.Duration.microseconds // 1000}</p>
+        <p><b>Duration:</b> {(exp_results.Duration.total_seconds() // 60):.0f}m {(exp_results.Duration.total_seconds() % 60):.0f}s {exp_results.Duration.microseconds // 1000}ms</p>
         <p><b>Dataset:</b> {gl.DatasetNames[exp_results.DATASET]}</p>
         <p><b>Measures:</b> {MEASURES}</p>
         <p><b>Modeling Technique:</b> {ModelingNames[exp_results.MODELING]}</p>
