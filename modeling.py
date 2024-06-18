@@ -138,7 +138,7 @@ class ExperimentResults:
         print(f'Percentage of components selected for valence: {self.comp_vs_valence_comp:.2f}')
         print(f'Percentage of causal model performance vs regression model performance for valence: {100.00 * self.causal_valence_vs_pred_valence:.2f}')
 
-def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=True):   
+def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=False):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
     if not apply_ica:
         # selected_features = gl.Selected_audio_features + gl.Selected_video_features
@@ -419,7 +419,7 @@ def runExperiment():
     FOLDS = len(participants) #as many as RECOLA participants. Leave-one-out cross-validation
 
     # Initialize the k-Fold cross-validator
-    kf = KFold(n_splits=FOLDS, shuffle=True, random_state=1)
+    kf = KFold(n_splits=FOLDS, shuffle=True)
 
     fold_cnt = 0
     modeling_results = dict()
@@ -611,7 +611,7 @@ if __name__ == "__main__":
     EXPERIMENT_FOLDER_PATH = getFolderPath() + 'modeling_exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + f'_{CUSTOM_EXP_TITLE}'
 
     experiment = None
-    #experiment = runExperiment()
+    experiment = runExperiment()
 
     if not experiment:
         with open('experiment_results.pkl', 'rb') as f:
