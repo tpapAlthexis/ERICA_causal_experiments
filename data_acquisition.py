@@ -12,13 +12,14 @@ def readData(participant, dataset):
 
     return data_df, annotations_df
 
-def readDataAll_p(measures_list, dataset, exclude_participants=[]):
+def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percentage=1.0):
     participants = gl.getParticipants(dataset)
     participants = [p for p in participants if p not in exclude_participants]
     participants.sort()
 
     data = {}
     annotations = []
+    participant_random_indices = {}
 
     #read data and annotations for each measure and for all participants
     for measure in measures_list:
@@ -28,12 +29,20 @@ def readDataAll_p(measures_list, dataset, exclude_participants=[]):
             prefixes = gl.Measure_Category_Prefixes.get(measure, [])
             cols = [col for col in data_measure_df.columns if any(col.startswith(prefix) for prefix in prefixes)]
             data_measure_df = data_measure_df[cols]
+            #if current participant random indices are not available, then generate random indices
+            if participant not in participant_random_indices:
+                #create participant entry in participant_random_indices
+                participant_random_indices[participant] = np.random.choice(data_measure_df.shape[0], int(data_percentage * data_measure_df.shape[0]), replace=False)
+            
+            data_measure_df = data_measure_df.iloc[participant_random_indices[participant]]
             data_measure.append(data_measure_df)
         
         data[measure] = pd.concat(data_measure)
 
     for participant in participants:
         annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
+        #use participant_random_indices to get the annotations for the same indices as the data
+        annotations_df = annotations_df.iloc[participant_random_indices[participant]]
         annotations.append(annotations_df)
 
     data_df = pd.concat(data.values(), axis=1)

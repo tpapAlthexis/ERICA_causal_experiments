@@ -16,6 +16,7 @@ from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import column
 from bokeh.models import Div, Spacer
+from bokeh.transform import dodge
 
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.utils.cit import fisherz
@@ -36,7 +37,6 @@ import pickle
 def getFolderPath():
     return gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/'
 EXPERIMENT_FOLDER_PATH =  getFolderPath() + 'modeling_exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-CUSTOM_EXP_TITLE = None
 
 class Modeling:
     LinearRegression = 1
@@ -48,6 +48,23 @@ ModelingNames = {
     Modeling.MLP: 'MLP',
     Modeling.SVR: 'SVR'
 }
+
+class ExperimentSetup:
+    Default = 1
+    Random_Participants = 2
+    Random_P_Records = 3
+
+CUSTOM_EXP_TITLES = {
+    ExperimentSetup.Default: 'Default',
+    ExperimentSetup.Random_Participants: 'Random_Participants',
+    ExperimentSetup.Random_P_Records: 'Random_P_Records'
+}
+
+EXPERIMENT_SETUP = ExperimentSetup.Random_P_Records
+CUSTOM_EXP_TITLE = CUSTOM_EXP_TITLES[EXPERIMENT_SETUP]
+
+RANDOM_PARTICIPANTS_CNT = 5
+RANDOM_PARTICIPANT_PERCENTAGE = 0.25
 
 DATASET = gl.Dataset.RECOLA
 MEASURES = [gl.AUDIO, gl.VIDEO]
@@ -83,8 +100,9 @@ class Baseline_Metrics:
     VALENCE_BASELINE_PCC = 'valence_baseline_pcc'
 
 class ExperimentResults:
-    def __init__(self, fold_results, mean_results, fold_cnt, DATASET, MODELING, model_params, FOLDS, COMP_THRESHOLD, Model_Metrics_str, Model_Metrics, Baseline_Metrics_str, Baseline_Metrics, duration):
+    def __init__(self, fold_results, mean_results, experiment_setup, fold_cnt, DATASET, MODELING, model_params, FOLDS, COMP_THRESHOLD, Model_Metrics_str, Model_Metrics, Baseline_Metrics_str, Baseline_Metrics, duration):
         self.mean_results = mean_results
+        self.experiment_setup = experiment_setup
         self.fold_cnt = fold_cnt
         self.DATASET = DATASET
         self.MODELING = MODELING
@@ -98,12 +116,18 @@ class ExperimentResults:
         self.Baseline_Metrics = Baseline_Metrics
         self.Duration = duration
 
+        # Calculate additional metrics
+        self.calculate_additional_metrics()
+
     def calculate_additional_metrics(self):
         self.comp_vs_arousal_comp = self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_AROUSAL_TARGETS] / self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_MEASURES]
         self.comp_vs_valence_comp = self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_VALENCE_TARGETS] / self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_MEASURES]
 
         self.causal_arousal_vs_pred_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_KENDALL] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_KENDALL]
         self.causal_valence_vs_pred_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_KENDALL] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_KENDALL]
+
+        self.causal_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
+        self.causal_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_KENDALL]
 
         self.pred_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
         self.pred_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_KENDALL]
@@ -112,22 +136,20 @@ class ExperimentResults:
 
         # Print experiment setup
         print(f'--------- Experiment setup ------------')
+        print(f'Experiment title: {CUSTOM_EXP_TITLES[self.experiment_setup]}')
         print(f'Dataset: {gl.DatasetNames[self.DATASET]}')
         print(f'Modeling: {ModelingNames[self.MODELING]}')
         print(f'Model parameters: {self.model_params}')
         print(f'Folds: {self.FOLDS}')
         print(f'Components threshold: {self.COMP_THRESHOLD}')
         print(f'Measures: {MEASURES}')
-        print(f'Exp. duration (m:s:ms): {self.Duration.total_seconds() // 60}:{self.Duration.total_seconds() % 60}:{self.Duration.microseconds // 1000}')
-        print(f'---------------------------------------')
+        print(f'Exp. duration (m:s:ms): {self.Duration.total_seconds() // 60}m {self.Duration.total_seconds() % 60}s {self.Duration.microseconds // 1000}ms')
+        print('---------------------------------------')
 
         # Print the results
         print('------------ Mean values --------------')
         print_results(self.mean_results)
         print('---------------------------------------')
-
-        # Calculate additional metrics
-        self.calculate_additional_metrics()
 
         # Print additional metrics
         print(f'Percentage of reg performance vs baseline performance for arousal: {100.00 * self.pred_arousal_vs_baseline_arousal:.2f}')
@@ -137,9 +159,12 @@ class ExperimentResults:
         print(f'Percentage of reg performance vs baseline performance for valence: {100.00 * self.pred_valence_vs_baseline_valence:.2f}')
         print(f'Percentage of components selected for valence: {self.comp_vs_valence_comp:.2f}')
         print(f'Percentage of causal model performance vs regression model performance for valence: {100.00 * self.causal_valence_vs_pred_valence:.2f}')
+        print(f'----------------------------------------------------')
+        print(f'Causal arousal model VS baseline arousal model: {100.00 * self.causal_arousal_vs_baseline_arousal:.2f}')
+        print(f'Causal valence model VS baseline valence model: {100.00 * self.causal_valence_vs_baseline_valence:.2f}')
 
-def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=False):   
-    data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid)
+def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=False, data_perc=1.0):   
+    data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid, data_percentage=data_perc)
     if not apply_ica:
         # selected_features = gl.Selected_audio_features + gl.Selected_video_features
         # data = data[selected_features]  # Filter columns based on selected features
@@ -219,9 +244,9 @@ def get_selected_features(edges, train_features):
     for edge in edges:
         print(f'Edge: {edge.get_node1().get_name()} --> {edge.get_node2().get_name()}')
         if train_features_gr is None:
-            train_features_gr = train_features[edge.get_node1().get_name()]
+            train_features_gr = train_features[[edge.get_node1().get_name()]]
         else:
-            train_features_gr = pd.concat([train_features_gr, train_features[edge.get_node1().get_name()]], axis=1)
+            train_features_gr = pd.concat([train_features_gr, train_features[[edge.get_node1().get_name()]]], axis=1)
 
     return train_features_gr
 
@@ -253,8 +278,8 @@ def print_results(results):
         else:
             print(value)
 
-def evaluate_baseline_model(train_participants, test_participants):
-    train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False)
+def evaluate_baseline_model(train_participants, test_participants, data_perc=1.0):
+    train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False, data_perc=data_perc)
     test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=False)
     
     arousal_train_targets = train_targets['median_' + gl.AROUSAL]
@@ -291,14 +316,61 @@ def evaluate_baseline_model(train_participants, test_participants):
 
     return baseline_results
 
+def getFoldBarPlot(exp_results, metric_str_1, metric_str_2, metric_1, metric_2, title, x_axis_label, y_axis_label, legend_title_1, legend_title_2, bar_title_1, bar_title_2):
+    participants = []
+    metric_1_arr = []
+    metric_2_arr = []
+
+    for fold_number, results in exp_results.fold_results.items():
+        participant = results['Test Participant']['Participant']
+        participants.append(f"Fold {fold_number} - P{participant}")
+        metric_1_arr.append(results[metric_str_1][metric_1])
+        metric_2_arr.append(results[metric_str_2][metric_2])
+
+    source = ColumnDataSource(data={
+        'participants': participants,
+        bar_title_1: metric_1_arr,
+        bar_title_2: metric_2_arr
+    })
+
+    bar_width = 0.4
+    p = figure(x_range=participants, title=title, height=200, sizing_mode='scale_width', toolbar_location=None, tools="", x_axis_label=x_axis_label, y_axis_label=y_axis_label)
+        
+    vbar1 = p.vbar(x=dodge('participants', -bar_width/2, range=p.x_range), top=bar_title_1, width=bar_width, color="blue", source=source, alpha=0.3, legend_label=legend_title_1)
+    vbar2 = p.vbar(x=dodge('participants', bar_width/2, range=p.x_range), top=bar_title_2, width=bar_width, color="red", source=source, alpha=0.6, legend_label=legend_title_2)
+        
+    p.y_range.start = 0
+    p.xgrid.grid_line_color = None
+    p.xaxis.axis_label = "Fold # & Participant #"
+        
+    hover = HoverTool(renderers=[vbar1, vbar2], tooltips=[
+            ("Participant", "@participants"),
+            ("Arousal PCC", f"@{bar_title_1}"),
+            ("Valence PCC", f"@{bar_title_2}"),
+        ], mode='vline')
+    
+    p.add_tools(hover)
+    p.yaxis.axis_label = "Pearson Correlation Coefficient"
+    p.legend.title = "Metric"
+    p.legend.location = "top_left"
+
+    return p
+
 def create_experiment_report(exp_results, file_path):
     output_file(file_path)
 
     spacer = Spacer(height=30)
 
+    exp_setup_prefs = ""
+    if exp_results.experiment_setup == ExperimentSetup.Random_Participants:
+        exp_setup_prefs = f"<p><b>Randomly selected participants</b>: {RANDOM_PARTICIPANTS_CNT} out of {FOLDS}</p>"
+    elif exp_results.experiment_setup == ExperimentSetup.Random_P_Records:
+        exp_setup_prefs = f"<p><b>Randomly selected data percentage: {RANDOM_PARTICIPANT_PERCENTAGE}</b></p>"
+
     exp_setup_div = Div(text=f"""
-        <h1>Experiment Report for {CUSTOM_EXP_TITLE}</h1>
+        <h1>Experiment Report for {CUSTOM_EXP_TITLES[exp_results.experiment_setup]}</h1>
         <h2>Experiment Setup</h2>
+        {exp_setup_prefs}
         <p><b>Timestamp:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         <p><b>Duration:</b> {(exp_results.Duration.total_seconds() // 60):.0f}m {(exp_results.Duration.total_seconds() % 60):.0f}s {exp_results.Duration.microseconds // 1000}ms</p>
         <p><b>Dataset:</b> {gl.DatasetNames[exp_results.DATASET]}</p>
@@ -336,12 +408,14 @@ def create_experiment_report(exp_results, file_path):
     })
 
     # Prepare additional metrics as a string
-    additional_metrics_str = '<h2>Additional Metrics</h2><table style="width:100%">'
+    additional_metrics_str = '<h2>Additional Modeling Metrics</h2><table style="width:100%">'
     additional_metrics = [
         ('Arousal | ICA Reg VS Baseline', 100.00 * exp_results.pred_arousal_vs_baseline_arousal),
+        ('Arousal | Causal VS Baseline', 100.00 * exp_results.causal_arousal_vs_baseline_arousal),
         ('Arousal | Components selected', exp_results.comp_vs_arousal_comp),
         ('Arousal | Causal VS Reg', 100.00 * exp_results.causal_arousal_vs_pred_arousal),
         ('Valence | ICA Reg VS Baseline', 100.00 * exp_results.pred_valence_vs_baseline_valence),
+        ('Valence | Causal VS Baseline', 100.00 * exp_results.causal_valence_vs_baseline_valence),
         ('Valence | Components selected', exp_results.comp_vs_valence_comp),
         ('Valence | Causal VS Reg', 100.00 * exp_results.causal_valence_vs_pred_valence)
     ]
@@ -360,53 +434,27 @@ def create_experiment_report(exp_results, file_path):
             """
     })
 
-    # Plotting causal_arousal_pcc and causal_valence_pcc for each fold
-    participants = []
-    causal_arousal_pcc = []
-    causal_valence_pcc = []
+    p_c_c = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, "Arousal VS Valence Causal Modeling", "Fold Participant", "PCC Value", "Causal Arousal Model", "Causal Valence Model", "causal_arousal_pcc", "causal_valence_pcc")
+    p_baseline_vs_ica_modeling_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, "Baseline VS ICA Modeling ~ Arousal", "Fold Participant", "PCC Value", "ICA Model", "Baseline Model", "reg_arousal_pcc", "arousal_baseline_pcc")
+    p_baseline_vs_ica_modeling_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, "Baseline VS ICA Modeling ~ Valence", "Fold Participant", "PCC Value", "ICA Model", "Baseline Model", "reg_valence_pcc", "valence_baseline_pcc")
+    p_ica_modeling_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Model_Metrics.CAUSAL_AROUSAL_KENDALL, "ICA VS Causal ICA Modeling ~ Arousal", "Fold Participant", "PCC Value", "ICA Model", "Causal Model", "reg_arousal_pcc", "causal_arousal_pcc")
+    p_ica_modeling_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_VALENCE_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, "ICA VS Causal ICA Modeling ~ Valence", "Fold Participant", "PCC Value", "ICA Model", "Causal Model", "reg_valence_pcc", "causal_valence_pcc")
+    p_baseline_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, "Baseline VS Causal ICA Modeling ~ Arousal", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_arousal_pcc", "arousal_baseline_pcc")
+    p_baseline_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, "Baseline VS Causal ICA Modeling ~ Valence", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_valence_pcc", "valence_baseline_pcc")
 
-    for fold_number, results in exp_results.fold_results.items():
-        participant = results['Test Participant']['Participant']
-        participants.append(f"Fold {fold_number} - P{participant}")
-        causal_arousal_pcc.append(results['Model Metrics'][Model_Metrics.CAUSAL_AROUSAL_PCC])
-        causal_valence_pcc.append(results['Model Metrics'][Model_Metrics.CAUSAL_VALENCE_PCC])
-
-    source = ColumnDataSource(data={
-        'participants': participants,
-        'causal_arousal_pcc': causal_arousal_pcc,
-        'causal_valence_pcc': causal_valence_pcc
-    })
-
-    p = figure(x_range=participants, title="Causal PCC by Fold", height=200, sizing_mode='scale_width', toolbar_location=None, tools="", x_axis_label='Fold Participant', y_axis_label='PCC Value')
-    
-    vbar1 = p.vbar(x='participants', top='causal_arousal_pcc', width=0.9, color="blue", source=source, alpha=0.5, legend_label="Arousal PCC")
-    vbar2 = p.vbar(x='participants', top='causal_valence_pcc', width=0.9, color="red", source=source, alpha=0.5, legend_label="Valence PCC")
-    
-    p.y_range.start = 0
-    p.xgrid.grid_line_color = None
-    p.xaxis.axis_label = "Fold # & Participant #"
-    
-    hover = HoverTool(renderers=[vbar1, vbar2], tooltips=[
-            ("Participant", "@participants"),
-            ("Arousal PCC", "@causal_arousal_pcc"),
-            ("Valence PCC", "@causal_valence_pcc"),
-        ], mode='vline')
-    
-    p.add_tools(hover)
-    p.yaxis.axis_label = "Pearson Correlation Coefficient"
-    p.legend.title = "Metric"
-    p.legend.location = "top_left"
-
-    layout = column(exp_setup_div, mean_values_div, additional_metrics_div, spacer, p, sizing_mode='stretch_width')
+    layout = column(exp_setup_div, mean_values_div, additional_metrics_div, spacer, p_c_c, p_baseline_vs_ica_modeling_arousal, p_baseline_vs_ica_modeling_valence, p_baseline_vs_causal_arousal, p_baseline_vs_causal_valence, p_ica_modeling_vs_causal_arousal, p_ica_modeling_vs_causal_valence, sizing_mode='stretch_width')
     save(layout)
 
-def create_experiment_folder_path():
+def create_experiment_folder_path(exp):
     if not os.path.exists(EXPERIMENT_FOLDER_PATH):
         os.makedirs(EXPERIMENT_FOLDER_PATH)
 
+    with open(EXPERIMENT_FOLDER_PATH + '/experiment_results.pkl', 'wb') as f:
+        pickle.dump(experiment, f)
+
     return EXPERIMENT_FOLDER_PATH
 
-def runExperiment():
+def runExperiment(exp_setup=ExperimentSetup.Default):
     start_time = datetime.now()
 
     p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
@@ -438,14 +486,24 @@ def runExperiment():
         test_participants = [participants[i] for i in test_index]
 
         ica_models = {}
+        participant_data_perc = 1.0
+
+        if (exp_setup == ExperimentSetup.Random_Participants):
+            train_participants = np.random.choice(train_participants, RANDOM_PARTICIPANTS_CNT, replace=False)
+            print(f'Randomly selected participants: {train_participants}')
+        elif (exp_setup == ExperimentSetup.Random_P_Records):
+            participant_data_perc = RANDOM_PARTICIPANT_PERCENTAGE
+            print(f'Randomly selected data percentage: {participant_data_perc}')
+
         print("Reading training data...")
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, ica_models=ica_models)
+        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, ica_models=ica_models, data_perc=participant_data_perc)
+
         print("Reading testing data...")
         test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, ica_models=ica_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         print("Evaluating baseline model...")
-        baseline_results = evaluate_baseline_model(train_participants, test_participants)
+        baseline_results = evaluate_baseline_model(train_participants, test_participants, data_perc=participant_data_perc)
         print(f'Baseline model finished.')
 
         print("Reading data...")
@@ -586,6 +644,7 @@ def runExperiment():
     experiment = ExperimentResults(
     fold_results=modeling_results,  # This is the dictionary with all fold results
     mean_results=mean_results,      # Assuming you have a dictionary with mean values
+    experiment_setup=exp_setup,
     fold_cnt=fold_cnt,
     DATASET=DATASET,
     MODELING=MODELING,
@@ -607,15 +666,14 @@ def runExperiment():
 
 if __name__ == "__main__":
 
-    CUSTOM_EXP_TITLE = "default_modeling"
     EXPERIMENT_FOLDER_PATH = getFolderPath() + 'modeling_exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + f'_{CUSTOM_EXP_TITLE}'
 
     experiment = None
-    experiment = runExperiment()
+    experiment = runExperiment(EXPERIMENT_SETUP)
 
     if not experiment:
         with open('experiment_results.pkl', 'rb') as f:
             experiment = pickle.load(f)
 
-    create_experiment_folder_path()
+    create_experiment_folder_path(exp=experiment)
     create_experiment_report(experiment, file_path=f'{EXPERIMENT_FOLDER_PATH}/modeling.html')
