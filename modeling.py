@@ -173,9 +173,9 @@ class ExperimentResults:
         print(f'Causal arousal model VS baseline arousal model: {100.00 * self.causal_arousal_vs_baseline_arousal:.2f}')
         print(f'Causal valence model VS baseline valence model: {100.00 * self.causal_valence_vs_baseline_valence:.2f}')
 
-def read_data(p_to_avoid=[], apply_ica=False, dim_reduction_models={}, shuffle=False, data_perc=1.0):   
+def read_data(p_to_avoid=[], apply_comp_reduction=False, dim_reduction_models={}, shuffle=False, data_perc=1.0):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid, data_percentage=data_perc)
-    if not apply_ica:
+    if not apply_comp_reduction:
         # selected_features = gl.Selected_audio_features + gl.Selected_video_features
         # data = data[selected_features]  # Filter columns based on selected features
         if shuffle:
@@ -295,8 +295,8 @@ def print_results(results):
             print(value)
 
 def evaluate_baseline_model(train_participants, test_participants, data_perc=1.0):
-    train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False, data_perc=data_perc)
-    test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=False)
+    train_features, train_targets = read_data(p_to_avoid=test_participants, apply_comp_reduction=False, data_perc=data_perc)
+    test_features, test_targets = read_data(p_to_avoid=train_participants, apply_comp_reduction=False)
 
     arousal_train_targets = train_targets['median_' + gl.AROUSAL]
     valence_train_targets = train_targets['median_' + gl.VALENCE]
@@ -515,10 +515,10 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
             print(f'Randomly selected data percentage: {participant_data_perc}')
 
         print("Reading training data...")
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, dim_reduction_models=dim_reduction_models, data_perc=participant_data_perc)
+        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_comp_reduction=True, dim_reduction_models=dim_reduction_models, data_perc=participant_data_perc)
 
         print("Reading testing data...")
-        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, dim_reduction_models=dim_reduction_models)
+        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_comp_reduction=True, dim_reduction_models=dim_reduction_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         # if test features cols are less than train features cols, drop the extra cols

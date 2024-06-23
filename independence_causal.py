@@ -112,29 +112,42 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
 
-            pca = PCA(n_components=variance_threshold, svd_solver='full')  
-            pca.fit(data)
-            components = pca.transform(data)
-
-            expl_variance = np.sum(pca.explained_variance_ratio_)
-            comp = components.shape[1]
-
-            num_of_components = components_threshold if components.shape[1] > components_threshold else components.shape[1]
-
-            if components.shape[1] > components_threshold:
-                pca = PCA(n_components=components_threshold, svd_solver='full') 
+            pca = PCA(n_components=variance_threshold, svd_solver='full', tol=0.1, random_state=0)  
+            if not category in PCA_models:
                 pca.fit(data)
                 components = pca.transform(data)
-            
-            log = f"\nPCA for category: {category} - Original shape: {data.shape}, Explained variance: {expl_variance:.2f} for {comp}, Reduced to components number: {num_of_components} where expl. variance: {np.sum(pca.explained_variance_ratio_):.2f}" 
-            proc_logs[0] += log
-            print(log)
+
+                expl_variance = np.sum(pca.explained_variance_ratio_)
+                comp = components.shape[1]
+
+                num_of_components = components_threshold if components.shape[1] > components_threshold else components.shape[1]
+
+                if components.shape[1] > components_threshold:
+                    pca = PCA(n_components=num_of_components, svd_solver='full', tol=0.1, random_state=0) 
+                    pca.fit(data)
+                    components = pca.transform(data)
+                
+                log = f"\nPCA for category: {category} - Original shape: {data.shape}, Explained variance: {expl_variance:.2f} for {comp}, Reduced to components number: {num_of_components} where expl. variance: {np.sum(pca.explained_variance_ratio_):.2f}" 
+                proc_logs[0] += log
+                print(log)
+
+                PCA_models[category] = pca
+            else:
+                pca = PCA_models[category]
+                components = PCA_models[category].transform(data)
+
+                expl_variance = np.sum(pca.explained_variance_ratio_)
+                comp = components.shape[1]
+
+                log = f"\nPCA matrix PASSED - for category: {category} - Original shape: {data.shape}, Explained variance: {expl_variance:.2f} for {comp}" 
+                proc_logs[0] += log
+                print(log)
+
         except UserWarning as e:
             print(f'apply_pca_to_categories: converge failure - {str(e)}')
             proc_logs[0] += f"{LOG_SEPARATOR}PCA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
             continue
 
-        PCA_models[category] = pca
         pca_results[category] = components
 
     print("-------------------" )
