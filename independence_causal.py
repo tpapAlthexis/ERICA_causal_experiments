@@ -64,7 +64,7 @@ def preprocess_data(data_df, annotations_df, components_threshold=50, use_ica=US
         categorized_data = {key: value for key, value in categorized_data.items() if key in analysis_features}
 
     if use_ica:
-        component_data = apply_ica_to_categories(categorized_data, 0.95, components_threshold, proc_logs)
+        component_data = apply_ica_to_categories(categorized_data, components_threshold, proc_logs)
     else:
         component_data = apply_pca_to_categories(categorized_data, 0.95, components_threshold, proc_logs)
 
@@ -153,8 +153,7 @@ def apply_pca_to_categories(categorized_data, variance_threshold=0.95, component
     print("-------------------" )
     return pca_results
 
-def apply_ica_to_categories(categorized_data, variance_threshold=0.95, components_threshold=50, proc_logs=[''], ICA_models = {}):
-    pca_results = {}
+def apply_ica_to_categories(categorized_data, components_threshold=50, proc_logs=[''], ICA_models = {}):
     ica_results = {}
     valid_data, invalid_categories = da.validate_categorized_data(categorized_data)
     if invalid_categories:
@@ -163,26 +162,14 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
     print("-------------------")
     print("ICA results")
     for category, data in valid_data.items():
-        pca = PCA(n_components=variance_threshold, svd_solver='full')  
-        pca_components = pca.fit_transform(data)
-        num_of_components = components_threshold if pca_components.shape[1] > components_threshold else pca_components.shape[1]
-
-        pca_results[0] = pca_components
-        proc_logs[0] = f"Pre-analysis: PCA{LOG_SEPARATOR}Measure category: {category}{LOG_SEPARATOR}Original shape: {data.shape}{LOG_SEPARATOR}Explained variance: {100.00 * np.sum(pca.explained_variance_ratio_):.2f}% for {pca_components.shape[1]} components{LOG_SEPARATOR}Reduced to components number: {num_of_components}"
-        print(proc_logs[0])
-        # Keep log of explained variance for the number of components used
-        if pca_components.shape[1] > components_threshold:
-            pca = PCA(n_components=components_threshold, svd_solver='full')
-            pca_components = pca.fit_transform(data)
-            expl_log = f"Explained variance for {pca_components.shape[1]} components: {np.sum(pca.explained_variance_ratio_):.2f}"
-            proc_logs[0] += f"{LOG_SEPARATOR}{expl_log}"
-            print(expl_log)
-
         try:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                ica = FastICA(n_components=num_of_components, tol=0.1, random_state=0, max_iter=1000)
+
                 if not category in ICA_models:
+
+                    ica = FastICA(n_components=components_threshold, tol=0.1, random_state=0, max_iter=1000)
+
                     ica.fit(data)
                     ica_components = ica.transform(data)
                     #append ICA model to the dictionary
@@ -192,12 +179,12 @@ def apply_ica_to_categories(categorized_data, variance_threshold=0.95, component
                     proc_logs[0] += f"\n{ica_log}"
                 else:
                     ica_components = ICA_models[category].transform(data)
-                    ica_log = f"ICA for category: {category} - Components transformed"
+                    ica_log = f"ICA matrix PASSED - for category: {category} - Components transformed"
                 if len(w) > 0 and "did not converge" in str(w[-1].message):
                     raise UserWarning("ICA failed to converge")
         except UserWarning as e:
             print(f'apply_ica_to_categories: converge failure - {str(e)}')
-            proc_logs[0] += f"{LOG_SEPARATOR}ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {num_of_components}. Category will not contained to the analysis"
+            proc_logs[0] += f"{LOG_SEPARATOR}ICA failed to converge for category: {category}. Category shape: {data.shape}, Number of components: {components_threshold}. Category will not contained to the analysis"
             continue
         ica_results[category] = ica_components
         #print the results if fitting has been done (not only transform)

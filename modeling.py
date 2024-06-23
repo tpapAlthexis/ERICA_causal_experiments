@@ -70,7 +70,7 @@ DIM_REDUCTION_NAMES = {
 }
 
 DIM_REDUCTION_MODEL = DIM_REDUCTION.PCA
-EXPERIMENT_SETUP = ExperimentSetup.Default
+EXPERIMENT_SETUP = ExperimentSetup.Random_Participants
 CUSTOM_EXP_TITLE = CUSTOM_EXP_TITLES[EXPERIMENT_SETUP]
 
 RANDOM_PARTICIPANTS_CNT = 5
@@ -191,9 +191,9 @@ def read_data(p_to_avoid=[], apply_comp_reduction=False, dim_reduction_models={}
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
     if DIM_REDUCTION_MODEL == DIM_REDUCTION.PCA:
-        component_data = ic.apply_pca_to_categories(categorized_data, 0.95, COMP_THRESHOLD, PCA_models=dim_reduction_models)
+        component_data = ic.apply_pca_to_categories(categorized_data, variance_threshold=0.95, components_threshold=COMP_THRESHOLD, PCA_models=dim_reduction_models)
     elif DIM_REDUCTION_MODEL == DIM_REDUCTION.ICA:
-        component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=dim_reduction_models)
+        component_data = ic.apply_ica_to_categories(categorized_data, COMP_THRESHOLD, ICA_models=dim_reduction_models)
     else:
         print("read_data: Invalid dimensionality reduction model.")
         return
@@ -361,8 +361,8 @@ def getFoldBarPlot(exp_results, metric_str_1, metric_str_2, metric_1, metric_2, 
         
     hover = HoverTool(renderers=[vbar1, vbar2], tooltips=[
             ("Participant", "@participants"),
-            ("Arousal PCC", f"@{bar_title_1}"),
-            ("Valence PCC", f"@{bar_title_2}"),
+            (legend_title_1, f"@{bar_title_1}"),
+            (legend_title_2, f"@{bar_title_2}"),
         ], mode='vline')
     
     p.add_tools(hover)
@@ -427,11 +427,11 @@ def create_experiment_report(exp_results, file_path):
     # Prepare additional metrics as a string
     additional_metrics_str = '<h2>Additional Modeling Metrics</h2><table style="width:100%">'
     additional_metrics = [
-        ('Arousal | ICA Reg VS Baseline', 100.00 * exp_results.pred_arousal_vs_baseline_arousal),
+        (f'Arousal | {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Reg VS Baseline', 100.00 * exp_results.pred_arousal_vs_baseline_arousal),
         ('Arousal | Causal VS Baseline', 100.00 * exp_results.causal_arousal_vs_baseline_arousal),
         ('Arousal | Components selected', exp_results.comp_vs_arousal_comp),
         ('Arousal | Causal VS Reg', 100.00 * exp_results.causal_arousal_vs_pred_arousal),
-        ('Valence | ICA Reg VS Baseline', 100.00 * exp_results.pred_valence_vs_baseline_valence),
+        (f'Valence | {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Reg VS Baseline', 100.00 * exp_results.pred_valence_vs_baseline_valence),
         ('Valence | Causal VS Baseline', 100.00 * exp_results.causal_valence_vs_baseline_valence),
         ('Valence | Components selected', exp_results.comp_vs_valence_comp),
         ('Valence | Causal VS Reg', 100.00 * exp_results.causal_valence_vs_pred_valence)
@@ -452,14 +452,14 @@ def create_experiment_report(exp_results, file_path):
     })
 
     p_c_c = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, "Arousal VS Valence Causal Modeling", "Fold Participant", "PCC Value", "Causal Arousal Model", "Causal Valence Model", "causal_arousal_pcc", "causal_valence_pcc")
-    p_baseline_vs_ica_modeling_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, "Baseline VS ICA Modeling ~ Arousal", "Fold Participant", "PCC Value", "ICA Model", "Baseline Model", "reg_arousal_pcc", "arousal_baseline_pcc")
-    p_baseline_vs_ica_modeling_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, "Baseline VS ICA Modeling ~ Valence", "Fold Participant", "PCC Value", "ICA Model", "Baseline Model", "reg_valence_pcc", "valence_baseline_pcc")
-    p_ica_modeling_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Model_Metrics.CAUSAL_AROUSAL_KENDALL, "ICA VS Causal ICA Modeling ~ Arousal", "Fold Participant", "PCC Value", "ICA Model", "Causal Model", "reg_arousal_pcc", "causal_arousal_pcc")
-    p_ica_modeling_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_VALENCE_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, "ICA VS Causal ICA Modeling ~ Valence", "Fold Participant", "PCC Value", "ICA Model", "Causal Model", "reg_valence_pcc", "causal_valence_pcc")
-    p_baseline_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, "Baseline VS Causal ICA Modeling ~ Arousal", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_arousal_pcc", "arousal_baseline_pcc")
-    p_baseline_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, "Baseline VS Causal ICA Modeling ~ Valence", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_valence_pcc", "valence_baseline_pcc")
+    p_baseline_vs_comp_modeling_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, f"Baseline VS {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Baseline Model", "reg_arousal_pcc", "arousal_baseline_pcc")
+    p_baseline_vs_comp_modeling_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, f"Baseline VS {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Baseline Model", "reg_valence_pcc", "valence_baseline_pcc")
+    p_comp_modeling_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Model_Metrics.CAUSAL_AROUSAL_KENDALL, f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Causal Model", "reg_arousal_pcc", "causal_arousal_pcc")
+    p_comp_modeling_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_VALENCE_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Causal Model", "reg_valence_pcc", "causal_valence_pcc")
+    p_baseline_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, f"Baseline VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_arousal_pcc", "arousal_baseline_pcc")
+    p_baseline_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, f"Baseline VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_valence_pcc", "valence_baseline_pcc")
 
-    layout = column(exp_setup_div, mean_values_div, additional_metrics_div, spacer, p_c_c, p_baseline_vs_ica_modeling_arousal, p_baseline_vs_ica_modeling_valence, p_baseline_vs_causal_arousal, p_baseline_vs_causal_valence, p_ica_modeling_vs_causal_arousal, p_ica_modeling_vs_causal_valence, sizing_mode='stretch_width')
+    layout = column(exp_setup_div, mean_values_div, additional_metrics_div, spacer, p_c_c, p_baseline_vs_comp_modeling_arousal, p_baseline_vs_comp_modeling_valence, p_baseline_vs_causal_arousal, p_baseline_vs_causal_valence, p_comp_modeling_vs_causal_arousal, p_comp_modeling_vs_causal_valence, sizing_mode='stretch_width')
     save(layout)
 
 def create_experiment_folder_path(exp):
