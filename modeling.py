@@ -60,7 +60,17 @@ CUSTOM_EXP_TITLES = {
     ExperimentSetup.Random_P_Records: 'Random_P_Records'
 }
 
-EXPERIMENT_SETUP = ExperimentSetup.Random_P_Records
+class DIM_REDUCTION:
+    PCA = 1
+    ICA = 2
+
+DIM_REDUCTION_NAMES = {
+    DIM_REDUCTION.PCA: 'PCA',
+    DIM_REDUCTION.ICA: 'ICA'
+}
+
+DIM_REDUCTION_MODEL = DIM_REDUCTION.PCA
+EXPERIMENT_SETUP = ExperimentSetup.Default
 CUSTOM_EXP_TITLE = CUSTOM_EXP_TITLES[EXPERIMENT_SETUP]
 
 RANDOM_PARTICIPANTS_CNT = 5
@@ -163,7 +173,7 @@ class ExperimentResults:
         print(f'Causal arousal model VS baseline arousal model: {100.00 * self.causal_arousal_vs_baseline_arousal:.2f}')
         print(f'Causal valence model VS baseline valence model: {100.00 * self.causal_valence_vs_baseline_valence:.2f}')
 
-def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=False, data_perc=1.0):   
+def read_data(p_to_avoid=[], apply_ica=False, dim_reduction_models={}, shuffle=False, data_perc=1.0):   
     data, annotations = da.readDataAll_p(MEASURES, DATASET, exclude_participants=p_to_avoid, data_percentage=data_perc)
     if not apply_ica:
         # selected_features = gl.Selected_audio_features + gl.Selected_video_features
@@ -180,8 +190,14 @@ def read_data(p_to_avoid=[], apply_ica=False, ica_models={}, shuffle=False, data
     #keep only the features we are interested in
     categorized_data = {key: value for key, value in categorized_data.items() if key in MEASURES}
 
-    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=ica_models)
-    component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=ica_models)
+    if DIM_REDUCTION_MODEL == DIM_REDUCTION.PCA:
+        component_data = ic.apply_pca_to_categories(categorized_data, 0.95, COMP_THRESHOLD, PCA_models=dim_reduction_models)
+    elif DIM_REDUCTION_MODEL == DIM_REDUCTION.ICA:
+        component_data = ic.apply_ica_to_categories(categorized_data, 0.95, COMP_THRESHOLD, ICA_models=dim_reduction_models)
+    else:
+        print("read_data: Invalid dimensionality reduction model.")
+        return
+
     flattened_data = pd.DataFrame()
     for category, data in component_data.items():
         if isinstance(data, np.ndarray) and data.ndim == 2:  # Check if data is a 2D numpy array
@@ -281,7 +297,7 @@ def print_results(results):
 def evaluate_baseline_model(train_participants, test_participants, data_perc=1.0):
     train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=False, data_perc=data_perc)
     test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=False)
-    
+
     arousal_train_targets = train_targets['median_' + gl.AROUSAL]
     valence_train_targets = train_targets['median_' + gl.VALENCE]
 
@@ -375,6 +391,7 @@ def create_experiment_report(exp_results, file_path):
         <p><b>Duration:</b> {(exp_results.Duration.total_seconds() // 60):.0f}m {(exp_results.Duration.total_seconds() % 60):.0f}s {exp_results.Duration.microseconds // 1000}ms</p>
         <p><b>Dataset:</b> {gl.DatasetNames[exp_results.DATASET]}</p>
         <p><b>Measures:</b> {MEASURES}</p>
+        <p><b>Dim reductuion:</b> {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]}</p>
         <p><b>Modeling Technique:</b> {ModelingNames[exp_results.MODELING]}</p>
         <p><b>Model params:</b> {exp_results.model_params}</p>
         <p><b>Folds/Participants:</b> {exp_results.FOLDS}</p>
@@ -485,7 +502,9 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
         train_participants = [participants[i] for i in train_index]
         test_participants = [participants[i] for i in test_index]
 
-        ica_models = {}
+        print(f'Train participants: {train_participants}, Test participants: {test_participants}')
+
+        dim_reduction_models = {}
         participant_data_perc = 1.0
 
         if (exp_setup == ExperimentSetup.Random_Participants):
@@ -496,11 +515,19 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
             print(f'Randomly selected data percentage: {participant_data_perc}')
 
         print("Reading training data...")
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, ica_models=ica_models, data_perc=participant_data_perc)
+        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_ica=True, dim_reduction_models=dim_reduction_models, data_perc=participant_data_perc)
 
         print("Reading testing data...")
-        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, ica_models=ica_models)
+        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_ica=True, dim_reduction_models=dim_reduction_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
+
+        # if test features cols are less than train features cols, drop the extra cols
+        if len(test_features.columns) > len(train_features.columns):
+            print(f"Dropping extra columns from test features: {len(test_features.columns) - len(train_features.columns)}")
+            test_features = test_features.drop(columns=[col for col in test_features.columns if col not in train_features.columns])
+        if len(train_features.columns) > len(test_features.columns):
+            print(f"Dropping extra columns from train features: {len(train_features.columns) - len(test_features.columns)}")
+            train_features = train_features.drop(columns=[col for col in train_features.columns if col not in test_features.columns])
 
         print("Evaluating baseline model...")
         baseline_results = evaluate_baseline_model(train_participants, test_participants, data_perc=participant_data_perc)
@@ -555,6 +582,9 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
         print("Training the causal regression models...")
         causalRegArousal = train_model(causalRegArousal, train_features_gr_arousal, arousal_train_targets)
         causalRegValence = train_model(causalRegValence, train_features_gr_valence, valence_train_targets)
+
+        if not 'video_comp_4' in test_features.columns:
+            print(f'video_comp_4 not in train_features.columns. Skipping fold {fold_cnt}...')
 
         print("Evaluating the models for participant:", test_participants)
         reg_arousal_predictions = predict_model(regArousalModel, test_features)
@@ -630,7 +660,6 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
                 if metric_key not in mean_results[sub_key]:
                     mean_results[sub_key][metric_key] = 0
                 mean_results[sub_key][metric_key] += metric_value
-                print(f'Adding {metric_value} to {metric_key} in {sub_key}')
     
     print(f'Folds: {fold_cnt}')
     for key, value in mean_results.items():
