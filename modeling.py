@@ -86,6 +86,7 @@ PARTICIPANTS = gl.getParticipants(DATASET)
 # key measures enums
 Graph_Metrics_str = "Graph Metrics"
 class Graph_Metrics:
+    Graph = 'Graph'
     TOTAL_AROUSAL_TARGETS = 'total_arousal_targets | selected'
     TOTAL_VALENCE_TARGETS = 'total_valence_targets | selected'
     TOTAL_EDGES = 'total_edges | total_selected_components'
@@ -110,7 +111,7 @@ class Baseline_Metrics:
     VALENCE_BASELINE_PCC = 'valence_baseline_pcc'
 
 class ExperimentResults:
-    def __init__(self, fold_results, mean_results, experiment_setup, fold_cnt, DATASET, MODELING, model_params, FOLDS, COMP_THRESHOLD, Model_Metrics_str, Model_Metrics, Baseline_Metrics_str, Baseline_Metrics, duration):
+    def __init__(self, fold_results, mean_results, experiment_setup, fold_cnt, DATASET, MODELING, model_params, FOLDS, COMP_THRESHOLD, Model_Metrics_str, Model_Metrics, Baseline_Metrics_str, Baseline_Metrics, duration, graphs):
         self.mean_results = mean_results
         self.experiment_setup = experiment_setup
         self.fold_cnt = fold_cnt
@@ -125,11 +126,14 @@ class ExperimentResults:
         self.Baseline_Metrics_str = Baseline_Metrics_str
         self.Baseline_Metrics = Baseline_Metrics
         self.Duration = duration
+        self.Graphs = graphs
 
         # Calculate additional metrics
         self.calculate_additional_metrics()
 
     def calculate_additional_metrics(self):
+        self.edge_histogram = ic.get_edge_histogram(self.Graphs, FOLDS)
+        self.mean_graph = ic.create_new_graph(self.edge_histogram)
         self.comp_vs_arousal_comp = self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_AROUSAL_TARGETS] / self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_MEASURES]
         self.comp_vs_valence_comp = self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_VALENCE_TARGETS] / self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_MEASURES]
 
@@ -612,6 +616,7 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
         print("Finished evaluating the models...")
 
         graph_results = {
+            Graph_Metrics.Graph: cg_train,
             Graph_Metrics.TOTAL_AROUSAL_TARGETS: len(arousal_edges),
             Graph_Metrics.TOTAL_VALENCE_TARGETS: len(valence_edges),
             Graph_Metrics.TOTAL_EDGES: len(resp_edges),
@@ -645,15 +650,18 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
     end_time = datetime.now()
 
     mean_results = {}
+    graphs = []
     for fold, value in modeling_results.items():
         if not isinstance(value, dict):
             print(f'Value {value} is not hashable. Skipping...')
             continue
-
         for sub_key, sub_value in value.items():
             if sub_key not in mean_results:
                 mean_results[sub_key] = {}
             for metric_key, metric_value in sub_value.items():
+                if metric_key is Graph_Metrics.Graph:
+                    graphs.append(metric_value)
+                    continue
                 if not isinstance(metric_value, (int, float)):
                     mean_results.pop(sub_key, None)
                     continue
@@ -684,7 +692,8 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
     Model_Metrics=Model_Metrics,
     Baseline_Metrics_str=Baseline_Metrics_str,
     Baseline_Metrics=Baseline_Metrics,
-    duration=end_time - start_time
+    duration=end_time - start_time,
+    graphs=graphs
     )
     experiment.print_experiment_results()
 
@@ -693,16 +702,43 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
 
     return experiment
 
+def saveGraphImages(experiment, path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    for fold, value in experiment.fold_results.items():
+        if not isinstance(value, dict):
+            print(f'saveGraphImages: Value {value} is not hashable. Skipping...')
+            continue
+        for sub_key, sub_value in value.items():
+            for metric_key, metric_value in sub_value.items():
+                if metric_key == Graph_Metrics.Graph:
+                    graph = metric_value
+                    graph_name = f'graph_fold_{fold}_p_{str(value['Test Participant']['Participant'])}.jpg'
+                    pyd = GraphUtils.to_pydot(graph.G)
+                    tmp_png = pyd.create_png(f="png")
+
+                    savePath = path + graph_name
+                    
+                    # Save png to path
+                    with open(savePath, 'wb') as f:
+                        f.write(tmp_png)
+
+                    if not os.path.isfile(savePath):
+                        print(f"create_graph_image::Failed to create the file at: {savePath}")
+                        return False
+
 if __name__ == "__main__":
 
     EXPERIMENT_FOLDER_PATH = getFolderPath() + 'modeling_exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + f'_{CUSTOM_EXP_TITLE}'
 
     experiment = None
-    experiment = runExperiment(EXPERIMENT_SETUP)
+   # experiment = runExperiment(EXPERIMENT_SETUP)
 
     if not experiment:
         with open('experiment_results.pkl', 'rb') as f:
             experiment = pickle.load(f)
 
     create_experiment_folder_path(exp=experiment)
+    saveGraphImages(experiment, EXPERIMENT_FOLDER_PATH + '/graphs/')
     create_experiment_report(experiment, file_path=f'{EXPERIMENT_FOLDER_PATH}/modeling.html')
