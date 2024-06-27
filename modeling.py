@@ -94,10 +94,6 @@ class Graph_Metrics:
 
 Model_Metrics_str = "Model Metrics"
 class Model_Metrics:
-    REG_AROUSAL_KENDALL = 'reg_arousal_kendall'
-    REG_VALENCE_KENDALL = 'reg_valence_kendall'
-    CAUSAL_AROUSAL_KENDALL = 'causal_arousal_kendall'
-    CAUSAL_VALENCE_KENDALL = 'causal_valence_kendall'
     REG_AROUSAL_PCC = 'reg_arousal_pcc'
     REG_VALENCE_PCC = 'reg_valence_pcc'
     CAUSAL_AROUSAL_PCC = 'causal_arousal_pcc'
@@ -105,8 +101,6 @@ class Model_Metrics:
 
 Baseline_Metrics_str = "Baseline Metrics"
 class Baseline_Metrics:
-    AROUSAL_BASELINE_KENDALL = 'arousal_baseline_kendall'
-    VALENCE_BASELINE_KENDALL = 'valence_baseline_kendall'
     AROUSAL_BASELINE_PCC = 'arousal_baseline_pcc'
     VALENCE_BASELINE_PCC = 'valence_baseline_pcc'
 
@@ -137,14 +131,14 @@ class ExperimentResults:
         self.comp_vs_arousal_comp = self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_AROUSAL_TARGETS] / self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_MEASURES]
         self.comp_vs_valence_comp = self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_VALENCE_TARGETS] / self.mean_results[Graph_Metrics_str][Graph_Metrics.TOTAL_MEASURES]
 
-        self.causal_arousal_vs_pred_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_KENDALL] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_KENDALL]
-        self.causal_valence_vs_pred_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_KENDALL] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_KENDALL]
+        self.causal_arousal_vs_pred_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_PCC] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_PCC]
+        self.causal_valence_vs_pred_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_PCC] / self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_PCC]
 
-        self.causal_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
-        self.causal_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_KENDALL]
+        self.causal_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_AROUSAL_PCC] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_PCC]
+        self.causal_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.CAUSAL_VALENCE_PCC] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_PCC]
 
-        self.pred_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_KENDALL]
-        self.pred_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_KENDALL] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_KENDALL]
+        self.pred_arousal_vs_baseline_arousal = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_AROUSAL_PCC] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.AROUSAL_BASELINE_PCC]
+        self.pred_valence_vs_baseline_valence = self.mean_results[self.Model_Metrics_str][self.Model_Metrics.REG_VALENCE_PCC] / self.mean_results[self.Baseline_Metrics_str][self.Baseline_Metrics.VALENCE_BASELINE_PCC]
 
     def print_experiment_results(self):
 
@@ -277,10 +271,6 @@ def train_model(model, features, targets):
 def predict_model(model, features):
     return model.predict(features)
 
-def calculate_kendall_tau(test_targets, predictions):
-    kendall_tau, _ = stats.kendalltau(test_targets, predictions)
-    return kendall_tau
-
 def calculate_pcc(test_targets, predictions):
     pcc, _ = stats.pearsonr(test_targets, predictions)
     return pcc
@@ -299,8 +289,16 @@ def print_results(results):
             print(value)
 
 def evaluate_baseline_model(train_participants, test_participants, data_perc=1.0):
-    train_features, train_targets = read_data(p_to_avoid=test_participants, apply_comp_reduction=False, data_perc=data_perc)
-    test_features, test_targets = read_data(p_to_avoid=train_participants, apply_comp_reduction=False)
+    all_participants = gl.getParticipants(DATASET)
+
+    participants_to_avoid_train = [p for p in all_participants if p not in train_participants]
+    participants_to_avoid_train.extend(test_participants)
+    participants_to_avoid_test = [p for p in all_participants if p not in test_participants]
+    participants_to_avoid_test.extend(train_participants)
+    #remove test participant and one other participant (random) from all participants
+    # all_participants = [p for p in all_participants if p not in test_participants + list(np.random.choice(all_participants, 1, replace=False))]
+    train_features, train_targets = read_data(p_to_avoid=participants_to_avoid_train, apply_comp_reduction=False, data_perc=data_perc)
+    test_features, test_targets = read_data(p_to_avoid=participants_to_avoid_test, apply_comp_reduction=False)
 
     arousal_train_targets = train_targets['median_' + gl.AROUSAL]
     valence_train_targets = train_targets['median_' + gl.VALENCE]
@@ -321,15 +319,10 @@ def evaluate_baseline_model(train_participants, test_participants, data_perc=1.0
     baseline_arousal_predictions = predict_model(baselineArousalModel, test_features)
     baseline_valence_predictions = predict_model(baselineValenceModel, test_features)
 
-    arousal_baseline_kendall = calculate_kendall_tau(arousal_test_targets, baseline_arousal_predictions)
-    valence_baseline_kendall = calculate_kendall_tau(valence_test_targets, baseline_valence_predictions)
-
     arousal_baseline_pcc = calculate_pcc(arousal_test_targets, baseline_arousal_predictions)
     valence_baseline_pcc = calculate_pcc(valence_test_targets, baseline_valence_predictions)
 
     baseline_results = {
-        Baseline_Metrics.AROUSAL_BASELINE_KENDALL: arousal_baseline_kendall,
-        Baseline_Metrics.VALENCE_BASELINE_KENDALL: valence_baseline_kendall,
         Baseline_Metrics.AROUSAL_BASELINE_PCC: arousal_baseline_pcc,
         Baseline_Metrics.VALENCE_BASELINE_PCC: valence_baseline_pcc
     }
@@ -455,13 +448,13 @@ def create_experiment_report(exp_results, file_path):
             """
     })
 
-    p_c_c = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, "Arousal VS Valence Causal Modeling", "Fold Participant", "PCC Value", "Causal Arousal Model", "Causal Valence Model", "causal_arousal_pcc", "causal_valence_pcc")
-    p_baseline_vs_comp_modeling_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, f"Baseline VS {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Baseline Model", "reg_arousal_pcc", "arousal_baseline_pcc")
-    p_baseline_vs_comp_modeling_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, f"Baseline VS {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Baseline Model", "reg_valence_pcc", "valence_baseline_pcc")
-    p_comp_modeling_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_AROUSAL_KENDALL, Model_Metrics.CAUSAL_AROUSAL_KENDALL, f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Causal Model", "reg_arousal_pcc", "causal_arousal_pcc")
-    p_comp_modeling_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_VALENCE_KENDALL, Model_Metrics.CAUSAL_VALENCE_KENDALL, f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Causal Model", "reg_valence_pcc", "causal_valence_pcc")
-    p_baseline_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_AROUSAL_KENDALL, Baseline_Metrics.AROUSAL_BASELINE_KENDALL, f"Baseline VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_arousal_pcc", "arousal_baseline_pcc")
-    p_baseline_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_VALENCE_KENDALL, Baseline_Metrics.VALENCE_BASELINE_KENDALL, f"Baseline VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_valence_pcc", "valence_baseline_pcc")
+    p_c_c = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.CAUSAL_AROUSAL_PCC, Model_Metrics.CAUSAL_VALENCE_PCC, "Arousal VS Valence Causal Modeling", "Fold Participant", "PCC Value", "Causal Arousal Model", "Causal Valence Model", "causal_arousal_pcc", "causal_valence_pcc")
+    p_baseline_vs_comp_modeling_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_AROUSAL_PCC, Baseline_Metrics.AROUSAL_BASELINE_PCC, f"Baseline VS {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Baseline Model", "reg_arousal_pcc", "arousal_baseline_pcc")
+    p_baseline_vs_comp_modeling_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.REG_VALENCE_PCC, Baseline_Metrics.VALENCE_BASELINE_PCC, f"Baseline VS {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Baseline Model", "reg_valence_pcc", "valence_baseline_pcc")
+    p_comp_modeling_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_AROUSAL_PCC, Model_Metrics.CAUSAL_AROUSAL_PCC, f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Causal Model", "reg_arousal_pcc", "causal_arousal_pcc")
+    p_comp_modeling_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Model Metrics', Model_Metrics.REG_VALENCE_PCC, Model_Metrics.CAUSAL_VALENCE_PCC, f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", f"{DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Model", "Causal Model", "reg_valence_pcc", "causal_valence_pcc")
+    p_baseline_vs_causal_arousal = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_AROUSAL_PCC, Baseline_Metrics.AROUSAL_BASELINE_PCC, f"Baseline VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Arousal", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_arousal_pcc", "arousal_baseline_pcc")
+    p_baseline_vs_causal_valence = getFoldBarPlot(exp_results, 'Model Metrics', 'Baseline Metrics', Model_Metrics.CAUSAL_VALENCE_PCC, Baseline_Metrics.VALENCE_BASELINE_PCC, f"Baseline VS Causal {DIM_REDUCTION_NAMES[DIM_REDUCTION_MODEL]} Modeling ~ Valence", "Fold Participant", "PCC Value", "Causal Model", "Baseline Model", "causal_valence_pcc", "valence_baseline_pcc")
 
     layout = column(exp_setup_div, mean_values_div, additional_metrics_div, spacer, p_c_c, p_baseline_vs_comp_modeling_arousal, p_baseline_vs_comp_modeling_valence, p_baseline_vs_causal_arousal, p_baseline_vs_causal_valence, p_comp_modeling_vs_causal_arousal, p_comp_modeling_vs_causal_valence, sizing_mode='stretch_width')
     save(layout)
@@ -518,11 +511,17 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
             participant_data_perc = RANDOM_PARTICIPANT_PERCENTAGE
             print(f'Randomly selected data percentage: {participant_data_perc}')
 
+        all_participants = gl.getParticipants(DATASET)
+        participants_to_avoid_train = [p for p in all_participants if p not in train_participants]
+        participants_to_avoid_train.extend(test_participants)
+        participants_to_avoid_test = [p for p in all_participants if p not in test_participants]
+        participants_to_avoid_test.extend(train_participants)
+
         print("Reading training data...")
-        train_features, train_targets = read_data(p_to_avoid=test_participants, apply_comp_reduction=True, dim_reduction_models=dim_reduction_models, data_perc=participant_data_perc)
+        train_features, train_targets = read_data(p_to_avoid=participants_to_avoid_train, apply_comp_reduction=True, dim_reduction_models=dim_reduction_models, data_perc=participant_data_perc)
 
         print("Reading testing data...")
-        test_features, test_targets = read_data(p_to_avoid=train_participants, apply_comp_reduction=True, dim_reduction_models=dim_reduction_models)
+        test_features, test_targets = read_data(p_to_avoid=participants_to_avoid_test, apply_comp_reduction=True, dim_reduction_models=dim_reduction_models)
         print(f"Train participants len: {len(train_participants)}, Test participants len: {len(test_participants)}")
 
         # if test features cols are less than train features cols, drop the extra cols
@@ -600,13 +599,7 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
         causal_arousal_predictions = predict_model(causalRegArousal, causal_test_features_arousal)
         causal_valence_predictions = predict_model(causalRegValence, causal_test_features_valence)
 
-        print("Calculating Kendall tau correlation...")
-        arousal_reg_kendall = calculate_kendall_tau(arousal_test_targets, reg_arousal_predictions)
-        valence_reg_kendall = calculate_kendall_tau(valence_test_targets, reg_valence_predictions)
-
-        arousal_causal_kendall = calculate_kendall_tau(arousal_test_targets, causal_arousal_predictions)
-        valence_causal_kendall = calculate_kendall_tau(valence_test_targets, causal_valence_predictions)
-
+        print("Calculating PCC...")
         arousal_reg_pcc = calculate_pcc(arousal_test_targets, reg_arousal_predictions)
         valence_reg_pcc = calculate_pcc(valence_test_targets, reg_valence_predictions)
 
@@ -624,10 +617,6 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
         }
 
         prediction_results = {
-            Model_Metrics.REG_AROUSAL_KENDALL: arousal_reg_kendall,
-            Model_Metrics.REG_VALENCE_KENDALL: valence_reg_kendall,
-            Model_Metrics.CAUSAL_AROUSAL_KENDALL: arousal_causal_kendall,
-            Model_Metrics.CAUSAL_VALENCE_KENDALL: valence_causal_kendall,
             Model_Metrics.REG_AROUSAL_PCC: arousal_reg_pcc,
             Model_Metrics.REG_VALENCE_PCC: valence_reg_pcc,
             Model_Metrics.CAUSAL_AROUSAL_PCC: arousal_causal_pcc,
@@ -668,7 +657,7 @@ def runExperiment(exp_setup=ExperimentSetup.Default):
                 if metric_key not in mean_results[sub_key]:
                     mean_results[sub_key][metric_key] = 0
                 mean_results[sub_key][metric_key] += metric_value
-    
+
     print(f'Folds: {fold_cnt}')
     for key, value in mean_results.items():
         for metric_key, metric_value in value.items():
@@ -733,7 +722,7 @@ if __name__ == "__main__":
     EXPERIMENT_FOLDER_PATH = getFolderPath() + 'modeling_exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + f'_{CUSTOM_EXP_TITLE}'
 
     experiment = None
-   # experiment = runExperiment(EXPERIMENT_SETUP)
+    experiment = runExperiment(EXPERIMENT_SETUP)
 
     if not experiment:
         with open('experiment_results.pkl', 'rb') as f:
