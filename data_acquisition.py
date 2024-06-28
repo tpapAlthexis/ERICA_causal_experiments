@@ -12,14 +12,13 @@ def readData(participant, dataset):
 
     return data_df, annotations_df
 
-def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percentage=1.0):
+def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percentage=1.0, participant_random_indices={}):
     participants = gl.getParticipants(dataset)
     participants = [p for p in participants if p not in exclude_participants]
     participants.sort()
 
     data = {}
     annotations = []
-    participant_random_indices = {}
 
     #read data and annotations for each measure and for all participants
     for measure in measures_list:
