@@ -24,9 +24,10 @@ import data_acquisition as da
 
 PARTICIPANTS = gl.getParticipants()
 COMPONENTS_THRESHOLD = ic.COMPONENTS_THRESHOLD
+SWIFT_SAMLPING_ROWS = 0 # 400ms * Xrows = Ys
 USE_ICA = True
 FOLDS = 9
-EDGE_CUTOFF = 0#int(FOLDS / 2)
+EDGE_CUTOFF = int(FOLDS / 2)
 EXPERIMENT_FOLDER_PATH = gl.EXPERIMENTAL_DATA_PATH + '/causal_emotion/' + 'exp_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 RUN_FOR_ALL_PARTICIPANTS = True
 EXPERIMENT_MEASURES = [gl.AUDIO]#[gl.AUDIO, gl.EDA, gl.ECG, gl.VIDEO, gl.OTHER]
@@ -113,7 +114,7 @@ def run_causal_emotion_experiment(participant, analysis_features):
     return exp_dict
 
 def run_experiment_for_all_p(excl_participants, analysis_features, run_dim_reduction=True):
-    measure_data, annotation_data = da.readDataAll_p(analysis_features, DATASET, excl_participants)
+    measure_data, annotation_data = da.readDataAll_p(analysis_features, DATASET, excl_participants, 1.0, {}, SWIFT_SAMLPING_ROWS)
 
     if measure_data is None or annotation_data is None:
         print('No data found for all participants. Aborting experiment.')
@@ -129,6 +130,8 @@ def run_experiment_for_all_p(excl_participants, analysis_features, run_dim_reduc
 
     # groupKfold where each group is participant's data length - assuming that annotations match the measure data
     groups_sizes = [len((pd.read_csv(gl.getAnnotationsPath(participant, DATASET)))) for participant in eligible_participants]
+    if SWIFT_SAMLPING_ROWS:
+        groups_sizes = [size - SWIFT_SAMLPING_ROWS for size in groups_sizes]
     groups = [i for i in range(len(groups_sizes)) for _ in range(groups_sizes[i])]
 
     cv_g = GroupKFold(n_splits=FOLDS)

@@ -12,7 +12,7 @@ def readData(participant, dataset):
 
     return data_df, annotations_df
 
-def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percentage=1.0, participant_random_indices={}):
+def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percentage=1.0, participant_random_indices={}, shift_sampling=0):
     participants = gl.getParticipants(dataset)
     participants = [p for p in participants if p not in exclude_participants]
     participants.sort()
@@ -25,6 +25,8 @@ def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percenta
         data_measure = []
         for participant in participants:
             data_measure_df = clear_data(pd.read_csv(gl.getParticipantStandardizedPath(participant, dataset)))
+            if shift_sampling:
+                data_measure_df = data_measure_df.iloc[:-shift_sampling]
             prefixes = gl.Measure_Category_Prefixes.get(measure, [])
             cols = [col for col in data_measure_df.columns if any(col.startswith(prefix) for prefix in prefixes)]
             data_measure_df = data_measure_df[cols]
@@ -35,11 +37,14 @@ def readDataAll_p(measures_list, dataset, exclude_participants=[], data_percenta
             
             data_measure_df = data_measure_df.iloc[participant_random_indices[participant]]
             data_measure.append(data_measure_df)
+            
         
         data[measure] = pd.concat(data_measure)
 
     for participant in participants:
         annotations_df = clear_data(pd.read_csv(gl.getAnnotationsPath(participant, dataset)))
+        if shift_sampling:
+            annotations_df = annotations_df.iloc[shift_sampling:]
         #use participant_random_indices to get the annotations for the same indices as the data
         annotations_df = annotations_df.iloc[participant_random_indices[participant]]
         annotations.append(annotations_df)

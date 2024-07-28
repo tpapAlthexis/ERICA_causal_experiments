@@ -11,6 +11,7 @@ from sklearn.metrics import make_scorer
 from scipy import stats
 import os
 from tabulate import tabulate
+import sys
 
 from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.plotting import figure, output_file, save
@@ -77,7 +78,7 @@ RANDOM_PARTICIPANTS_CNT = 5
 RANDOM_PARTICIPANT_PERCENTAGE = 0.25
 
 DATASET = gl.Dataset.RECOLA
-MEASURES = [gl.AUDIO, gl.VIDEO]
+MEASURES = [gl.AUDIO, gl.VIDEO, gl.ECG, gl.EDA, gl.OTHER]
 FOLDS = 18 #as many as RECOLA participants. Leave-one-out cross-validation
 COMP_THRESHOLD = 5
 MODELING = Modeling.LinearRegression
@@ -467,6 +468,32 @@ def create_experiment_folder_path(exp):
         pickle.dump(experiment, f)
 
     return EXPERIMENT_FOLDER_PATH
+
+def exportParticipants():
+    participants = gl.getParticipants(DATASET)
+    p_to_avoid = integrity_check.is_ready_for_experiment(DATASET)
+    participants = [p for p in participants if p not in p_to_avoid]
+
+    csv_data = []
+
+    for participant in participants:
+        part_avoid = [p for p in participants if p != participant]
+        data, annotations = read_data(p_to_avoid=part_avoid, apply_comp_reduction=False)
+
+        #populate participant column
+        part_df = pd.DataFrame([participant] * len(data), columns=['Participant'])
+        #append data and annotations for each participant. Assign a new column for participant number
+        data_frame = pd.concat([part_df, data, annotations], axis=1)
+
+        csv_data.append(data_frame)
+    
+    #concatenate all dataframes
+    final_data = pd.concat(csv_data)
+    #set titles for the columns
+    final_data.columns = ['Participant'] + list(final_data.columns[1:])
+
+    final_data.to_csv(gl.EXPERIMENTAL_DATA_PATH + '/all_participants_data.csv', index=False)
+        
 
 def runExperiment(exp_setup=ExperimentSetup.Default):
     start_time = datetime.now()
