@@ -10,6 +10,7 @@ Plots/*
 
 # Exclude the entire data folder
 data/
+data/*
 
 installed_packages.txt
 
